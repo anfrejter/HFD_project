@@ -56,23 +56,30 @@ get_pos_ma <- function(prices, group = 1,
     INDEX = my.endpoints,
     FUN = function(x) sum(x, na.rm = TRUE)
   )
+
+  daily_pnl_gross_mr <- period.apply(pnl_net_mr,
+    INDEX = my.endpoints,
+    FUN = function(x) sum(x, na.rm = TRUE)
+  )
+
   daily_pnl_net_mm <- period.apply(pnl_net_mm,
     INDEX = my.endpoints,
     FUN = function(x) sum(x, na.rm = TRUE)
   )
 
-  # return(c(daily_pnl_net_mm))
+  daily_pnl_net_mr <- period.apply(pnl_net_mr,
+    INDEX = my.endpoints,
+    FUN = function(x) sum(x, na.rm = TRUE)
+  )
+
   result_xts <- merge(
-    prices, pos_flat, slow_m, fast_m, pos_mm, pos_mr,
-    pnl_gross_mm, pnl_gross_mr, n_trans_mm, n_trans_mr,
-    pnl_net_mm, pnl_net_mr,
-    fill = NA
+    daily_pnl_gross_mm, daily_pnl_net_mm,
+    daily_pnl_gross_mr, daily_pnl_net_mr
   )
 
   colnames(result_xts) <- c(
-    "prices", "pos_flat", "slow_m", "fast_m", "pos_mm", "pos_mr",
-    "pnl_gross_mm", "pnl_gross_mr", "n_trans_mm", "n_trans_mr",
-    "pnl_net_mm", "pnl_net_mr"
+    "daily_pnl_gross_mm", "daily_pnl_net_mm",
+    "daily_pnl_gross_mr", "daily_pnl_net_mr"
   )
   return(result_xts)
 }
