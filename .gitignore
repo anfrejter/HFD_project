@@ -47,3 +47,9 @@ po/*~
 
 # RStudio Connect folder
 rsconnect/
+
+Dataset1/*
+!Dataset1/.gitkeep
+Dataset2/*
+!Dataset2/.gitkeep
+.DS_Store
