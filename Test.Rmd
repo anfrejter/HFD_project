@@ -4,13 +4,13 @@ output: html_document
 ---
 
 ```{r}
-source("funs.R")
+source("strategies.R")
 source("plots.R")
 ```
 
 ```{r}
 load("~/Documents/GitHub/HFD_project/Dataset1/data1_2022_Q1.RData")
-res<-get_pos_ma(data1_2022_Q1$NQ,group=1,60,10,50,12)
+res<-get_pos_ma(data1_2022_Q1$NQ,group=1, 60, 10, 50, 12)
 res
 plot_ma_ggplot(res['2022-01-03'])
 ```
