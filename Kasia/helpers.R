@@ -10,7 +10,7 @@ library(kableExtra) # for even more nicely looking tables in html files
 library(quantmod) # for PnL graphs
 
 Sys.setlocale("LC_TIME", "English")
-#######################STATYSTYKI########################################
+#######################Statistics########################################
 
 # mySR function
 mySR <- function(x, scale) {
@@ -26,7 +26,7 @@ myCalmarRatio <- function(x, # x = series of returns
   
 } 
 
-statystyki <- function(gross, net, scale) {
+statistics <- function(gross, net, scale) {
   
   grossSR <- mySR(gross, scale)
   netSR <- mySR(net, scale)
@@ -43,7 +43,7 @@ statystyki <- function(gross, net, scale) {
   ))
 }
 
-#results <- statystyki(data.group1.daily$pnl_gross.mom,data.group1.daily$pnl_net.mom,252)
+#results <- statistics(data.group1.daily$pnl_gross.mom,data.group1.daily$pnl_net.mom,252)
 
 ##############################
 
