@@ -313,22 +313,14 @@ for (selected_quarter in c(
         add_stats = TRUE
     )
     
-    stat_all<-rbind(stat_all,res_vb)
+    stat_all2<-rbind(stat_all2,res_vb)
 }
 
-stat_all
+stat_all2
 ```
 
 ## MA
-prices, group = 1,
-                       slow_param, fast_param,
-                       p_val, tr_cost,
-                       signal_estimator = "mean",
-                       window_regime = 20,
-                       treshold_regime = 0.2,
-                       scale_ = 252,
-                       add_info = FALSE,
-                       add_stats = FALSE
+
 ```{r}
 fast_ma_ <- 37
 slow_ma_ <- fast_ma_ + 34
@@ -366,8 +358,8 @@ for (selected_quarter in c(
         add_stats = TRUE
     )
     
-    stat_all<-rbind(stat_all,res_ma)
+    stat_all3<-rbind(stat_all3,res_ma)
 }
 
-stat_all
+stat_all3
 ```
