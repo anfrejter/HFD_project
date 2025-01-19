@@ -1,0 +1,2 @@
+fast_ma,ma_diff,signal_estimator,window_regime,treshold_regime,volat_param,m_exit,m_diff,instrument_name,group_data,p_val,tr_cost
+100,16,median,89,0.11190000000000001,15,2.00012,1.4472300000000002,AUD,2,100000,10

@@ -8,29 +8,36 @@ mySR <- function(x, scale) {
     sd(coredata(x), na.rm = TRUE)
 }
 
-myCalmarRatio <- function(x, # x = series of returns
-                          scale) {
+myCalmarRatio <- function(x, scale) {
   scale * mean(coredata(x), na.rm = TRUE) /
     maxdrawdown(cumsum(x))$maxdrawdown
 }
 
-get_statistics <- function(gross, net, scale = 60, add_info = FALSE) {
-  grossSR <- mySR(gross, scale)
-  netSR <- mySR(net, scale)
-  grossCR <- myCalmarRatio(gross, scale)
-  netCR <- myCalmarRatio(net, scale)
-  stat <- netCR * max(0, log(abs(sum(net) / 1000)))
+get_statistics <- function(gross, net, scale = 252, add_info = FALSE) {
+
+  all_gross_zeros <- all(gross == 0)
+  all_net_zeros <- all(net == 0)
+
+  netCR <- if (all_net_zeros) 0 else myCalmarRatio(net, scale)
 
   if (add_info) {
+
+    grossSR <- if (all_gross_zeros) 0 else mySR(gross, scale)
+    grossCR <- if (all_gross_zeros) 0 else myCalmarRatio(gross, scale)
+    netSR <- if (all_net_zeros) 0 else mySR(net, scale)
+    stat_ <- if (all_net_zeros) 0 else netCR * max(0, log(abs(sum(net) / 1000)))
+
     return(data.frame(
       grossSR = grossSR,
       netSR = netSR,
       grossCR = grossCR,
       netCR = netCR,
-      stat = stat
+      stat = stat_
     ))
   } else {
-    return(stat)
+
+    stat_ <- if (all_net_zeros) 0 else netCR * max(0, log(abs(sum(net) / 1000)))
+    return(stat_)
   }
 }
 
@@ -55,6 +62,7 @@ get_pnl <- function(positions, prices, p_val, tr_cost, add_info = FALSE) {
   n_trans <- abs(diff.xts(positions))
   n_trans[1] <- 0
   pnl_net <- pnl_gross - n_trans * tr_cost
+  pnl_net[is.na(pnl_net)] <- 0
 
   # aggregate to daily
   my.endpoints <- endpoints(prices, "days")

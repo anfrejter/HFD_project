@@ -1,0 +1,2 @@
+fast_ma,ma_diff,signal_estimator,window_regime,treshold_regime,volat_param,treshold_vol,instrument_name,group_data,p_val,tr_cost
+11,94,median,100,0.010010000000000002,7,0.52613,XAU,2,100,15
