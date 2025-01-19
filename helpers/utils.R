@@ -103,3 +103,12 @@ get_pnl <- function(positions, prices, p_val, tr_cost, add_info = FALSE) {
     return(result_xts)
   }
 }
+
+sum_to_daily <- function(data) {
+  my.endpoints <- endpoints(data, "days")
+  daily_data <- period.apply(data,
+    INDEX = my.endpoints,
+    FUN = function(x) sum(x, na.rm = TRUE)
+  )
+  return(daily_data)
+}
