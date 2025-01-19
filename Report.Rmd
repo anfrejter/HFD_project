@@ -95,33 +95,39 @@ plotPositionsVB(
 ```
 
 ```{r}
+# WYKRES PNL - ZROBIĆ ŁADNIEJSZY WYKRES
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
 
-m_exit_ <- 2.45504
-m_diff_ <- 2.30502
+window_regime <- 20
+treshold_regime <- 0.11715
+
+volat_param <- 40
+
+m_exit_ <- 1.95150
+m_diff_ <- 1
 m_entry_ <- m_exit_ + m_diff_
 
-fast_ma_ <- 91
-slow_ma_ <- fast_ma_ + 57
 
 res_2vb <- get_pnl_2vb(prices = data1_2022_Q1$SP,
                        group = 1,
                        slow_param = slow_ma_,
                        fast_param = fast_ma_,
-                       volat_param = 59,
+                       volat_param = volat_param,
                        m_entry = m_entry_,
                        m_exit = m_exit_,
                        p_val = 50,
                        tr_cost = 12,
                        signal_estimator = "mean",
-                       window_regime = 20,
-                       treshold_regime = 0.2,
-                       add_info = FALSE,
+                       window_regime = window_regime ,
+                       treshold_regime = treshold_regime,
+                       add_info = TRUE,
                        add_stats = FALSE)
 
 res_2vb
 
-get_statistics(res_2vb$daily_pnl_gross, res_2vb$daily_pnl_net)
-
+plot(cumsum(res_2vb$pnl_gross_mm))
+#KONIEC
 maxdrawdown(cumsum(res_2vb$pnl_gross_mm))
 maxdrawdown(cumsum(res_2vb$pnl_net_mm))
 
@@ -212,4 +218,156 @@ dySeries("NQ.1", label = "price", color = "black", axis = 'y2', strokeWidth = 2,
 
 plot(cbind(long, short,data1_2022_Q1$NQ))
 
+```
+
+## 2VB
+
+```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
+window_regime <- 20
+treshold_regime <- 0.11715
+volat_param <- 40
+m_exit_ <- 1.95150
+m_diff_ <- 1
+m_entry_ <- m_exit_ + m_diff_
+
+# XAU,2
+stat_all<- c()
+
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
+)) {
+    message(selected_quarter)
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+    res_2vb <- get_pnl_2vb(
+        prices = data.group2$XAU,
+        group = 2,
+        slow_param = slow_ma_,
+        fast_param = fast_ma_,
+        volat_param = volat_param,
+        m_entry = m_entry_,
+        m_exit = m_exit_,
+        p_val = 100,
+        tr_cost = 15,
+        signal_estimator = "mean",
+        window_regime = window_regime,
+        treshold_regime = treshold_regime,
+        add_info = FALSE,
+        add_stats = TRUE
+    )
+    
+    stat_all<-rbind(stat_all,res_2vb)
+}
+
+stat_all
+```
+
+## VB
+
+```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
+window_regime <- 20
+treshold_regime <- 0.11715
+volat_param <- 40
+m_ <- 1.95150
+signal_estimator <- "mean"
+
+# XAU,2
+stat_all<- c()
+
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
+)) {
+    message(selected_quarter)
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+    res_vb <- get_pnl_vb(
+        prices = data.group2$XAU,
+        group = 2,
+        slow_param = slow_ma_,
+        fast_param = fast_ma_,
+        volat_param = volat_param,
+        m_ = m_,
+        p_val = 100,
+        tr_cost = 15,
+        scale_ = 252,
+        signal_estimator = signal_estimator,
+        window_regime = window_regime,
+        treshold_regime = treshold_regime,
+        add_info = FALSE,
+        add_stats = TRUE
+    )
+    
+    stat_all<-rbind(stat_all,res_vb)
+}
+
+stat_all
+```
+
+## MA
+prices, group = 1,
+                       slow_param, fast_param,
+                       p_val, tr_cost,
+                       signal_estimator = "mean",
+                       window_regime = 20,
+                       treshold_regime = 0.2,
+                       scale_ = 252,
+                       add_info = FALSE,
+                       add_stats = FALSE
+```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
+window_regime <- 20
+treshold_regime <- 0.11715
+signal_estimator <- "mean"
+
+# XAU,2
+stat_all<- c()
+
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
+)) {
+    message(selected_quarter)
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+    res_ma <- get_pnl_ma(
+        prices = data.group2$XAU,
+        group = 2,
+        slow_param = slow_ma_,
+        fast_param = fast_ma_,
+        p_val = 100,
+        tr_cost = 15,
+        scale_ = 252,
+        signal_estimator = signal_estimator,
+        window_regime = window_regime,
+        treshold_regime = treshold_regime,
+        add_info = FALSE,
+        add_stats = TRUE
+    )
+    
+    stat_all<-rbind(stat_all,res_ma)
+}
+
+stat_all
 ```
