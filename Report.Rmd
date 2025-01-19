@@ -115,6 +115,8 @@ volat_param <- 40
 
 m_exit_ <- 1.95150
 m_diff_ <- 1
+m_exit_ <- 1.95150
+m_diff_ <- 1
 m_entry_ <- m_exit_ + m_diff_
 
 res_2vb <- get_pnl_2vb(
