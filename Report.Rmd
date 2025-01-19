@@ -512,16 +512,16 @@ source("helpers/plots.R")
 
 # calculate data for group1
 #18,60,median,43,0.10757000000000001,100,1.7976700000000003,SP,1,50,12
-fast_ma_1 <- 18
+fast_ma_1 <- 72
 slow_ma_1 <- fast_ma_1 + 60
 signal_estimator1 <- "median"
-window_regime1 <- 43
-treshold_regime1 <- 0.10757000000000001
-volat_param1 <- 100
-m_1 <- 1.7976700000000003
-#m_entry1 <- 0.9569500000000001
-#m_diff1 <- 0.29624000000000006
-#m_exit1 <- m_entry1+m_diff1
+window_regime1 <- 51
+treshold_regime1 <- 0.19115
+volat_param1 <- 60
+#m_1 <- 1.7976700000000003
+m_entry1 <- 2.65975
+m_diff1 <- 1.44789
+m_exit1 <- m_entry1+m_diff1
 p_val1 <- 50
 tr_cost1 <- 12
 
@@ -551,22 +551,22 @@ for (selected_quarter in c("2022_Q1",
     load(filename_)
 
     data.group1 <- get(paste0("data1_", selected_quarter))
-    res_vb1 <- get_pnl_vb(
+    res_vb1 <- get_pnl_2vb(
         prices = data.group1$SP,
         group = 1,
         slow_param = slow_ma_1,
         fast_param = fast_ma_1,
         volat_param = volat_param1,
-        m_ = m_1,
-        #m_entry = m_entry1,
-        #m_exit = m_exit1,
+        #m_ = m_1,
+        m_entry = m_entry1,
+        m_exit = m_exit1,
         p_val = p_val1,
         tr_cost = tr_cost2,
         scale_ = 252,
         signal_estimator = signal_estimator1,
         window_regime = window_regime1,
         treshold_regime = treshold_regime1,
-        add_info = TRUE,
+        add_info = FALSE,
         add_stats = FALSE
     )
     res_vb2 <- get_pnl_vb(
@@ -582,25 +582,25 @@ for (selected_quarter in c("2022_Q1",
         signal_estimator = signal_estimator2,
         window_regime = window_regime2,
         treshold_regime = treshold_regime2,
-        add_info = TRUE,
+        add_info = FALSE,
         add_stats = FALSE
     )
     
-    daily_pnl_net1<-sum_to_daily(res_vb1$pnl_net_fl)
-    daily_pnl_gross1<-sum_to_daily(res_vb1$pnl_gross_fl)
-    daily_trans1<-sum_to_daily(res_vb1$n_trans_fl)
+    #daily_pnl_net1<-sum_to_daily(res_vb1$pnl_net_fl)
+    #daily_pnl_gross1<-sum_to_daily(res_vb1$pnl_gross_fl)
+    #daily_trans1<-sum_to_daily(res_vb1$n_trans_fl)
     
-    daily_pnl_net2<-sum_to_daily(res_vb1$pnl_net_fl)
-    daily_pnl_gross2<-sum_to_daily(res_vb1$pnl_gross_fl)
-    daily_trans2<-sum_to_daily(res_vb1$n_trans_fl)
+    #daily_pnl_net2<-sum_to_daily(res_vb1$pnl_net_fl)
+    #daily_pnl_gross2<-sum_to_daily(res_vb1$pnl_gross_fl)
+    #daily_trans2<-sum_to_daily(res_vb1$n_trans_fl)
     
-    stats_res <- get_statistics(daily_pnl_gross1+daily_pnl_gross2,
-                   daily_pnl_net1+daily_pnl_net2,
-                   daily_trans1+daily_trans2,
-                   add_info = TRUE)
+    #stats_res <- get_statistics(daily_pnl_gross1+daily_pnl_gross2,
+                   #daily_pnl_net1+daily_pnl_net2,
+                   #daily_trans1+daily_trans2,
+                   #add_info = TRUE)
     
-    stats_tmp <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_tmp)
+    #stats_tmp <- cbind(selected_quarter,stats_res)
+    #stats_all_gr1 <-rbind(stats_all_gr1,stats_tmp)
     
     data_all_inst1_<-rbind(data_all_inst1_,res_vb1)
     data_all_inst2_<-rbind(data_all_inst2_,res_vb2)
