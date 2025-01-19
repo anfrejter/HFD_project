@@ -231,6 +231,7 @@ volat_param <- 40
 m_exit_ <- 1.95150
 m_diff_ <- 1
 m_entry_ <- m_exit_ + m_diff_
+signal_estimator <-"mean"
 
 # XAU,2
 stat_all<- c()
@@ -257,7 +258,7 @@ for (selected_quarter in c(
         m_exit = m_exit_,
         p_val = 100,
         tr_cost = 15,
-        signal_estimator = "mean",
+        signal_estimator = signal_estimator,
         window_regime = window_regime,
         treshold_regime = treshold_regime,
         add_info = FALSE,
@@ -362,4 +363,89 @@ for (selected_quarter in c(
 }
 
 stat_all3
+```
+## Wykresy PNL
+
+### 2VB
+```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
+window_regime <- 20
+treshold_regime <- 0.11715
+volat_param <- 40
+m_exit_ <- 1.95150
+m_diff_ <- 1
+m_entry_ <- m_exit_ + m_diff_
+signal_estimator <-"mean"
+res_2vb <- get_pnl_2vb(prices = data1_2022_Q1$SP,
+                       group = 1,
+                       slow_param = slow_ma_,
+                       fast_param = fast_ma_,
+                       volat_param = volat_param,
+                       m_entry = m_entry_,
+                       m_exit = m_exit_,
+                       p_val = 50,
+                       tr_cost = 12,
+                       signal_estimator = signal_estimator,
+                       window_regime = window_regime ,
+                       treshold_regime = treshold_regime,
+                       add_info = TRUE,
+                       add_stats = FALSE)
+
+res_2vb
+
+plot(cumsum(res_2vb$pnl_gross_mm))
+```
+
+
+### VB
+```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
+window_regime <- 20
+treshold_regime <- 0.11715
+volat_param <- 40
+m_ <- 1.95150
+signal_estimator <- "mean"
+res_vb <- get_pnl_vb(prices = data1_2022_Q1$SP,
+                       group = 1,
+                       slow_param = slow_ma_,
+                       fast_param = fast_ma_,
+                       volat_param = volat_param,
+                       m_=m_,
+                       p_val = 50,
+                       tr_cost = 12,
+                       signal_estimator = signal_estimator,
+                       window_regime = window_regime ,
+                       treshold_regime = treshold_regime,
+                       add_info = TRUE,
+                       add_stats = FALSE)
+
+res_vb
+
+plot(cumsum(res_vb$pnl_gross_mm))
+```
+
+### MA
+```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
+window_regime <- 20
+treshold_regime <- 0.11715
+signal_estimator <- "mean"
+res_ma <- get_pnl_ma(prices = data1_2022_Q1$SP,
+                       group = 1,
+                       slow_param = slow_ma_,
+                       fast_param = fast_ma_,
+                       p_val = 50,
+                       tr_cost = 12,
+                       signal_estimator = signal_estimator,
+                       window_regime = window_regime ,
+                       treshold_regime = treshold_regime,
+                       add_info = TRUE,
+                       add_stats = FALSE)
+
+res_vb
+
+plot(cumsum(res_ma$pnl_gross_mm))
 ```
