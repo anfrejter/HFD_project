@@ -1,2 +1,2 @@
 fast_ma,ma_diff,signal_estimator,window_regime,treshold_regime,volat_param,treshold_vol,instrument_name,group_data,p_val,tr_cost
-44,65,mean,94,0.32582000000000005,85,1.53574,SP,1,50,12
+19,59,median,46,0.18007,100,1.6136400000000002,SP,1,50,12

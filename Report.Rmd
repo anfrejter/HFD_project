@@ -9,7 +9,6 @@ source("helpers/plots.R")
 ```
 
 ```{r}
-load("Dataset1/data1_2022_Q1.RData")
 res_long <- get_pnl_ma(data1_2022_Q1$NQ,
     group = 1,
     slow_param = 30, fast_param = 10,
@@ -18,9 +17,10 @@ res_long <- get_pnl_ma(data1_2022_Q1$NQ,
 res_long
 
 cbind(
-get_statistics(res_long$pnl_gross_mm,res_long$pnl_net_mm),
-get_statistics(res_long$pnl_gross_mr,res_long$pnl_net_mr),
-get_statistics(res_long$pnl_gross_fl,res_long$pnl_net_fl))
+    get_statistics(res_long$pnl_gross_mm, res_long$pnl_net_mm, n_trans = res_long$n_trans_mm, add_info = TRUE),
+    get_statistics(res_long$pnl_gross_mr, res_long$pnl_net_mr),
+    get_statistics(res_long$pnl_gross_fl, res_long$pnl_net_fl)
+)
 
 plot_ma_ggplot(
     prices = res_long$prices,
@@ -45,9 +45,16 @@ plot_ma_ggplot(
 res_short <- get_pnl_ma(data1_2022_Q1$NQ,
     group = 1,
     slow_param = 60, fast_param = 10,
-    p_val = 50, tr_cost = 12, add_info = FALSE, add_stats = FALSE
+    p_val = 50, tr_cost = 12, add_info = FALSE, add_stats = TRUE
 )
 res_short
+
+res_short_short <- get_pnl_ma(data1_2022_Q1$NQ,
+    group = 1,
+    slow_param = 60, fast_param = 10,
+    p_val = 50, tr_cost = 12, add_info = FALSE, add_stats = FALSE
+)
+res_short_short
 ```
 
 ```{r}
@@ -67,8 +74,9 @@ res_vb <- get_pnl_vb(
     window_regime = 20,
     treshold_regime = 0.2,
     add_info = TRUE,
-    add_stats = FALSE)
-
+    add_stats = FALSE
+)
+res_vb
 res_short <- get_pnl_vb(
     prices = data1_2022_Q1$NQ,
     group = 1,
@@ -82,7 +90,9 @@ res_short <- get_pnl_vb(
     window_regime = 20,
     treshold_regime = 0.2,
     add_info = FALSE,
-    add_stats = TRUE)
+    add_stats = TRUE
+)
+res_short
 
 res_vb$upper <- res_vb$slow_m + 1.5 * res_vb$volat_sd
 res_vb$lower <- res_vb$slow_m - 1.5 * res_vb$volat_sd
@@ -95,65 +105,110 @@ plotPositionsVB(
 ```
 
 ```{r}
+fast_ma_ <- 37
+slow_ma_ <- fast_ma_ + 34
 
-m_exit_ <- 2.45504
-m_diff_ <- 2.30502
+window_regime <- 20
+treshold_regime <- 0.11715
+
+volat_param <- 40
+
+m_exit_ <- 1.95150
+m_diff_ <- 1
 m_entry_ <- m_exit_ + m_diff_
 
-fast_ma_ <- 91
-slow_ma_ <- fast_ma_ + 57
-
-res_2vb <- get_pnl_2vb(prices = data1_2022_Q1$SP,
-                       group = 1,
-                       slow_param = slow_ma_,
-                       fast_param = fast_ma_,
-                       volat_param = 59,
-                       m_entry = m_entry_,
-                       m_exit = m_exit_,
-                       p_val = 50,
-                       tr_cost = 12,
-                       signal_estimator = "mean",
-                       window_regime = 20,
-                       treshold_regime = 0.2,
-                       add_info = FALSE,
-                       add_stats = FALSE)
-
+res_2vb <- get_pnl_2vb(
+    prices = data1_2022_Q1$NQ,
+    group = 2,
+    slow_param = slow_ma_,
+    fast_param = fast_ma_,
+    volat_param = volat_param,
+    m_entry = m_entry_,
+    m_exit = m_exit_,
+    p_val = 100,
+    tr_cost = 15,
+    signal_estimator = "mean",
+    window_regime = window_regime,
+    treshold_regime = treshold_regime,
+    add_info = FALSE,
+    add_stats = TRUE
+)
 res_2vb
+# XAU,2
 
-get_statistics(res_2vb$daily_pnl_gross, res_2vb$daily_pnl_net)
+stat_all <- c()
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
+)) {
+    message(selected_quarter)
 
-maxdrawdown(cumsum(res_2vb$pnl_gross_mm))
-maxdrawdown(cumsum(res_2vb$pnl_net_mm))
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
 
-sum(is.na(res_2vb$pnl_net))
-res_2vb$pnl_gross_mm
-plot(cumsum(res_2vb$pnl_net_mm))
-plot(cumsum(res_2vb$pnl_gross_mm))
+    load(filename_)
 
-all(res_2vb$pnl_gross_mm==0)
-all(res_2vb$pnl_net_mm==0)
+    data.group2 <- get(paste0("data2_", selected_quarter))
+    res_2vb_tmp <- get_pnl_2vb(
+        prices = data.group2$XAU,
+        group = 2,
+        slow_param = slow_ma_,
+        fast_param = fast_ma_,
+        volat_param = volat_param,
+        m_entry = m_entry_,
+        m_exit = m_exit_,
+        p_val = 100,
+        tr_cost = 15,
+        signal_estimator = "mean",
+        window_regime = window_regime,
+        treshold_regime = treshold_regime,
+        add_info = FALSE,
+        add_stats = TRUE
+    )
+    stat_all <- rbind(stat_all, res_2vb_tmp)
+}
+stat_all
 
+res_2vb_long <- get_pnl_2vb(
+    prices = data2_2024_Q2$XAU,
+    group = 2,
+    slow_param = slow_ma_,
+    fast_param = fast_ma_,
+    volat_param = volat_param,
+    m_entry = m_entry_,
+    m_exit = m_exit_,
+    p_val = 100,
+    tr_cost = 15,
+    signal_estimator = "mean",
+    window_regime = window_regime,
+    treshold_regime = treshold_regime,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+res_2vb_long
 
-res_2vb$exit_lower <- res_2vb$slow_m - m_exit_ * res_2vb$volat_sd
-res_2vb$exit_upper <- res_2vb$slow_m + m_exit_ * res_2vb$volat_sd
-res_2vb$entry_lower <- res_2vb$slow_m - m_entry_ * res_2vb$volat_sd
-res_2vb$entry_upper <- res_2vb$slow_m + m_entry_ * res_2vb$volat_sd
+res_2vb_long$exit_lower <- res_2vb_long$slow_m - m_exit_ * res_2vb_long$volat_sd
+res_2vb_long$exit_upper <- res_2vb_long$slow_m + m_exit_ * res_2vb_long$volat_sd
+res_2vb_long$entry_lower <- res_2vb_long$slow_m - m_entry_ * res_2vb_long$volat_sd
+res_2vb_long$entry_upper <- res_2vb_long$slow_m + m_entry_ * res_2vb_long$volat_sd
+
+plot(cumsum(res_2vb_long$pnl_gross_fl))
 
 plot_2vb_ggplot(
-    prices = res_2vb$prices,
-    signal = res_2vb$fast_m,
-    exit_lower = res_2vb$exit_lower,
-    exit_upper = res_2vb$exit_upper,
-    entry_lower = res_2vb$entry_lower,
-    entry_upper = res_2vb$entry_upper,
-    position = res_2vb$pos_fl,
-    date = "2022-01-11"
+    prices = res_2vb_long$prices,
+    signal = res_2vb_long$fast_m,
+    exit_lower = res_2vb_long$exit_lower,
+    exit_upper = res_2vb_long$exit_upper,
+    entry_lower = res_2vb_long$entry_lower,
+    entry_upper = res_2vb_long$entry_upper,
+    position = res_2vb_long$pos_fl,
+    date = "2024-06-30"
 )
 ```
 
 ```{r}
 regime <- get_regime(prices = data1_2022_Q1$NQ, window = 14, treshold = 0., type = "corr")
-corr_sign <- ifelse(corr_>0,1,-1)
+corr_sign <- ifelse(corr_ > 0, 1, -1)
 plot_ma_ggplot(
     prices = res_long$prices,
     slow_m = res_long$slow_m, fast_m = res_long$fast_m,
@@ -170,28 +225,28 @@ plot_ma_ggplot(
 library(dygraphs)
 
 corr_ <- runCor(y = lag.xts(data1_2022_Q1$NQ), x = lag.xts(data1_2022_Q1$NQ, 2), n = 100)
-dygraph(merge(corr_,data1_2022_Q1$NQ)) %>%
-  dySeries(
-    name = "NQ",
-    label = "Price",
-    color = "black",
-    axis = 'y',
-    strokeWidth = 2,
-    drawPoints = FALSE
-  ) %>%
-  dySeries(
-    name = "corr_",
-    label = "Correlation",
-    color = "red",
-    drawPoints = TRUE,
-    pointSize = 4,
-    strokeWidth = 0,
-    axis = 'y2'
-  ) %>%
-  dyRangeSelector() %>%
-  dyAxis('y', label = 'Price') %>%
-  dyAxis('y2', label = 'Correlation') %>%
-  dyOptions(connectSeparatedPoints = FALSE)
+dygraph(merge(corr_, data1_2022_Q1$NQ)) %>%
+    dySeries(
+        name = "NQ",
+        label = "Price",
+        color = "black",
+        axis = "y",
+        strokeWidth = 2,
+        drawPoints = FALSE
+    ) %>%
+    dySeries(
+        name = "corr_",
+        label = "Correlation",
+        color = "red",
+        drawPoints = TRUE,
+        pointSize = 4,
+        strokeWidth = 0,
+        axis = "y2"
+    ) %>%
+    dyRangeSelector() %>%
+    dyAxis("y", label = "Price") %>%
+    dyAxis("y2", label = "Correlation") %>%
+    dyOptions(connectSeparatedPoints = FALSE)
 
 library(roll)
 library(TTR)
@@ -201,15 +256,91 @@ RSI(lag.xts(data1_2022_Q1$NQ), n = 30)
 long <- roll_var(log(lag.xts(data1_2022_Q1$NQ)), 50)
 short <- roll_var(log(lag.xts(data1_2022_Q1$NQ)), 20)
 
-cbind(short/long,data1_2022_Q1$NQ)['2022-01-04::2022-03-24'] %>%
-  dygraph() %>%
-  dySeries("NQ", label = "ratio", color = "red", axis = 'y', strokeWidth = 2, drawPoints = FALSE) %>%
-dySeries("NQ.1", label = "price", color = "black", axis = 'y2', strokeWidth = 2, drawPoints = FALSE) %>%
-  dyRangeSelector() %>%
-  dyAxis('y', label = 'Price') %>%
-  dyAxis('y2', label = 'Correlation') %>%
-  dyOptions(connectSeparatedPoints = FALSE)
+cbind(short / long, data1_2022_Q1$NQ)["2022-01-04::2022-03-24"] %>%
+    dygraph() %>%
+    dySeries("NQ", label = "ratio", color = "red", axis = "y", strokeWidth = 2, drawPoints = FALSE) %>%
+    dySeries("NQ.1", label = "price", color = "black", axis = "y2", strokeWidth = 2, drawPoints = FALSE) %>%
+    dyRangeSelector() %>%
+    dyAxis("y", label = "Price") %>%
+    dyAxis("y2", label = "Correlation") %>%
+    dyOptions(connectSeparatedPoints = FALSE)
 
-plot(cbind(long, short,data1_2022_Q1$NQ))
+plot(cbind(long, short, data1_2022_Q1$NQ))
+```
+
+```{r}
+
+fast_ma_1 <- 57
+slow_ma_1 <- fast_ma_1 + 58
+window_regime1 <- 14
+treshold_regime1 <- 0.66677
+volat_param1 <- 69
+signal_estimator1 = "mean"
+m_1 <- 2.68167
+
+
+fast_ma_2 <- 34
+slow_ma_2 <- fast_ma_ + 47
+window_regime2 <- 2
+treshold_regime2 <- 0.40948
+volat_param2 <- 51
+signal_estimator2 = "mean"
+m_2 <- 1.86294
+
+pnl_data1 <- c()
+pnl_data2 <- c()
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
+)) {
+    message(selected_quarter)
+
+    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group1 <- get(paste0("data1_", selected_quarter))
+    res_vb_ins1 <- get_pnl_vb(
+        prices = data.group1$NQ,
+        group = 1,
+        slow_param = slow_ma_,
+        fast_param = fast_ma_,
+        volat_param = volat_param,
+        # m_entry = m_entry_,
+        # m_exit = m_exit_,
+        m_ = m_,
+        p_val = 50,
+        tr_cost = 12,
+        signal_estimator = signal_estimator,
+        window_regime = window_regime,
+        treshold_regime = treshold_regime,
+        add_info = FALSE,
+        add_stats = TRUE
+    )
+    res_vb_ins2 <- get_pnl_vb(
+        prices = data.group1$SP,
+        group = 1,
+        slow_param = slow_ma_,
+        fast_param = fast_ma_,
+        volat_param = volat_param,
+        # m_entry = m_entry_,
+        # m_exit = m_exit_,
+        m_ = m_,
+        p_val = 20,
+        tr_cost = 12,
+        signal_estimator = signal_estimator,
+        window_regime = window_regime,
+        treshold_regime = treshold_regime,
+        add_info = FALSE,
+        add_stats = TRUE
+    )
+    pnl_data1 <- rbind(pnl_data1, res_vb_ins1)
+    pnl_data2 <- rbind(pnl_data2, res_vb_ins2)
+}
+
+pnl_data1
+
+plot(cumsum(pnl_data1$pnl_gross_mm+pnl_data2$pnl_gross_mm))
 
 ```

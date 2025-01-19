@@ -46,6 +46,7 @@ import os
 import csv
 import optuna
 import pandas as pd
+import numpy as np
 
 ASSET_GROUPS = {
     1: {
@@ -82,7 +83,7 @@ def save_params(params, path, file="last_params"):
         writer.writerow(params.values())
 
 
-def load_scores(params, results_path, stats_names = ["stats_fl"]):
+def load_scores(params, results_path, stats_name = "stats_fl"):
     """
     Load the scores from the results CSV file.
     """
@@ -100,12 +101,12 @@ def load_scores(params, results_path, stats_names = ["stats_fl"]):
     file_path = results_path + "/results.csv"
 
     while True:
-        tmp = pd.read_csv(file_path).query(query)
+        tmp = pd.read_csv(file_path).tail(20).query(query)
         if not tmp.empty:
-            if not tmp[stats_names].empty:
-                return tmp[stats_names].fillna(0).sum().max()
+            if not tmp[stats_name].empty:
+                return tmp[stats_name].fillna(0).replace(np.inf,-1).mean() - tmp[stats_name].fillna(0).replace(np.inf,-1).std()/2
             else:
-                logger.error("Empty %s column in %s", stats_names, file_path)
+                logger.error("Empty %s column in %s", stats_name, file_path)
         sleep(0.1)
 
 def optimize_strategy(n_trials,
@@ -162,11 +163,11 @@ def param_space_ma(trial):
     Define the hyperparameter search space for the Moving Average strategy.
     """
     return {
-        "fast_ma": trial.suggest_int("fast_ma", 1, 100),
-        "ma_diff": trial.suggest_int("ma_diff", 1, 100),
+        "fast_ma": trial.suggest_int("fast_ma", 1, 60),
+        "ma_diff": trial.suggest_int("ma_diff", 1, 60),
         "signal_estimator": trial.suggest_categorical("signal_estimator", ["mean", "median"]),
         "window_regime": trial.suggest_int("window_regime", 2, 100),
-        "treshold_regime": trial.suggest_float("treshold_regime", 0, 0.6, step=1e-05)
+        "treshold_regime": trial.suggest_float("treshold_regime", 0, 0.8, step=1e-05)
     }
 
 def param_space_vb(trial):
@@ -174,13 +175,13 @@ def param_space_vb(trial):
     Define the hyperparameter search space for the Volatility Breakout Strategy.
     """
     return {
-        "fast_ma": trial.suggest_int("fast_ma", 10, 100),
-        "ma_diff": trial.suggest_int("ma_diff", 1, 100),
+        "fast_ma": trial.suggest_int("fast_ma", 1, 60),
+        "ma_diff": trial.suggest_int("ma_diff", 1, 60),
         "signal_estimator": trial.suggest_categorical("signal_estimator", ["mean", "median"]),
         "window_regime": trial.suggest_int("window_regime", 2, 100),
-        "treshold_regime": trial.suggest_float("treshold_regime", 0, 0.6, step=1e-05),
+        "treshold_regime": trial.suggest_float("treshold_regime", 0, 0.8, step=1e-05),
         "volat_param": trial.suggest_int("volat_param", 2, 100),
-        "m_": trial.suggest_float("treshold_vol", 0.5, 3, step=1e-05)
+        "m_": trial.suggest_float("treshold_vol", 0.1, 3, step=1e-05)
     }
 
 def param_space_2vb(trial):
@@ -188,34 +189,35 @@ def param_space_2vb(trial):
     Define the hyperparameter search space for the Double Volatility Breakout Strategy.
     """
     return {
-        "fast_ma": trial.suggest_int("fast_ma", 10, 100),
-        "ma_diff": trial.suggest_int("ma_diff", 1, 100),
+        "fast_ma": trial.suggest_int("fast_ma", 1, 60),
+        "ma_diff": trial.suggest_int("ma_diff", 1, 50),
         "signal_estimator": trial.suggest_categorical("signal_estimator", ["mean", "median"]),
         "window_regime": trial.suggest_int("window_regime", 2, 100),
-        "treshold_regime": trial.suggest_float("treshold_regime", 0, 0.6, step=1e-05),
+        "treshold_regime": trial.suggest_float("treshold_regime", 0, 0.8, step=1e-05),
         "volat_param": trial.suggest_int("volat_param", 1, 100),
-        "m_exit": trial.suggest_float("m_exit", 0.5, 3, step=1e-05),
-        "m_diff": trial.suggest_float("m_diff", 0.1, 3, step=1e-05),
+        "m_exit": trial.suggest_float("m_exit", 0.1, 3, step=1e-05),
+        "m_diff": trial.suggest_float("m_diff", 0.1, 1, step=1e-05),
 
     }
 
 if __name__ == "__main__":
 
-    N_TRIALS = 10
-    study_dict = {
-        'Moving_Average_Strategy': ["scripts/run_strat_ma.R", param_space_ma],
-        'Volatility_Breakout_Strategy': ["scripts/run_strat_vb.R", param_space_vb],
-        'Volatility_Breakout_Double_Strategy': ["scripts/run_strat_2vb.R", param_space_2vb],
-    }
+    while True:
+        N_TRIALS = 50
+        study_dict = {
+            'Volatility_Breakout_Double_Strategy': ["scripts/run_strat_2vb.R", param_space_2vb],
+            'Volatility_Breakout_Strategy': ["scripts/run_strat_vb.R", param_space_vb],
+            'Moving_Average_Strategy': ["scripts/run_strat_ma.R", param_space_ma],
+        }
 
-    for STUDY_NAME, [R_SCRIPT_PATH, PARAM_SCPACE_FUNC] in study_dict.items():
-        for group, assets in ASSET_GROUPS.items():
-            for asset in assets:
-                best_params = optimize_strategy(n_trials=N_TRIALS,
-                                                param_space_func=PARAM_SCPACE_FUNC,
-                                                study_name=STUDY_NAME,
-                                                r_script_path=R_SCRIPT_PATH,
-                                                instrument_name=asset,
-                                                group_data=group,
-                                                )
-
+        for STUDY_NAME, [R_SCRIPT_PATH, PARAM_SCPACE_FUNC] in study_dict.items():
+            for group, assets in ASSET_GROUPS.items():
+                for asset in assets:
+                    best_params = optimize_strategy(n_trials=N_TRIALS,
+                                                    param_space_func=PARAM_SCPACE_FUNC,
+                                                    study_name=STUDY_NAME,
+                                                    r_script_path=R_SCRIPT_PATH,
+                                                    instrument_name=asset,
+                                                    stat_name="stats_fl",
+                                                    group_data=group,
+                                                    )
