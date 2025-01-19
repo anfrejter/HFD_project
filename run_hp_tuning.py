@@ -207,7 +207,7 @@ if __name__ == "__main__":
         study_dict = {
             'Volatility_Breakout_Double_Strategy': ["scripts/run_strat_2vb.R", param_space_2vb],
             'Volatility_Breakout_Strategy': ["scripts/run_strat_vb.R", param_space_vb],
-            'Moving_Average_Strategy': ["scripts/run_strat_ma.R", param_space_ma],
+            # 'Moving_Average_Strategy': ["scripts/run_strat_ma.R", param_space_ma],
         }
 
         for STUDY_NAME, [R_SCRIPT_PATH, PARAM_SCPACE_FUNC] in study_dict.items():

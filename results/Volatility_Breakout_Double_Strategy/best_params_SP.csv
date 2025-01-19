@@ -1,2 +1,2 @@
 fast_ma,ma_diff,signal_estimator,window_regime,treshold_regime,volat_param,m_exit,m_diff,instrument_name,group_data,p_val,tr_cost
-40,46,median,85,0.0002,26,0.93686,0.27498,SP,1,50,12
+41,36,median,80,0.12140000000000001,23,0.8498100000000001,0.12172000000000001,SP,1,50,12

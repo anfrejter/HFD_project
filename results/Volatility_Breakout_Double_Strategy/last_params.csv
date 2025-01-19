@@ -1,2 +1,2 @@
 fast_ma,ma_diff,signal_estimator,window_regime,treshold_regime,volat_param,m_exit,m_diff,instrument_name,group_data,p_val,tr_cost
-54,32,mean,95,0.6703100000000001,41,2.5598600000000005,0.63381,XAG,2,5000,10
+31,26,mean,16,0.36048,79,1.6595700000000002,0.1763,AUD,2,100000,10

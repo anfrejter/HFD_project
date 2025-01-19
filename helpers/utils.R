@@ -27,6 +27,8 @@ get_statistics <- function(gross, net, n_trans = NA, scale = 252, add_info = FAL
     grossCR <- if (all_gross_zeros) 0 else myCalmarRatio(gross, scale)
     netSR <- if (all_net_zeros) 0 else mySR(net, scale)
     stat_ <- if (all_net_zeros) 0 else netCR * max(0, log(abs(sum(net) / 1000)))
+    grossPNL <- sum(gross)
+    netPNL <- sum(net)
 
     return(data.frame(
       grossSR = grossSR,
@@ -34,7 +36,9 @@ get_statistics <- function(gross, net, n_trans = NA, scale = 252, add_info = FAL
       grossCR = grossCR,
       netCR = netCR,
       stat = stat_,
-      avg_ntrans = avg_ntrans
+      avg_ntrans = avg_ntrans,
+      grossPNL = grossPNL,
+      netPNL = netPNL
     ))
   } else {
 

@@ -1,2 +1,2 @@
 fast_ma,ma_diff,signal_estimator,window_regime,treshold_regime,instrument_name,group_data,p_val,tr_cost
-60,60,mean,82,0.60584,CAD,2,100000,10
+29,58,mean,86,0.24930000000000002,XAG,2,5000,10
