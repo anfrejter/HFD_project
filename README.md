@@ -6,6 +6,7 @@ This project focuses on hyperparameter optimization for trading strategies using
 ---
 
 ## Directory Structure
+
 ```
 
 HFT_Strategy_Optimization/
@@ -42,6 +43,8 @@ HFT_Strategy_Optimization/
     ├── run_strat_2vb.R
     ├── run_strat_ma.R
     └── run_strat_vb.R
+
+```
 
 ---
 
