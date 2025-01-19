@@ -95,15 +95,15 @@ get_pnl_ma <- function(prices, group = 1,
   } else {
 
     stats_mm <- get_statistics(results_mm$daily_pnl_gross,
-      results_mm$daily_pnl_net,
+      results_mm$daily_pnl_net, n_trans = results_mm$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     stats_mr <- get_statistics(results_mr$daily_pnl_gross,
-      results_mr$daily_pnl_net,
+      results_mr$daily_pnl_net, n_trans = results_mr$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     stats_fl <- get_statistics(results_fl$daily_pnl_gross,
-      results_fl$daily_pnl_net,
+      results_fl$daily_pnl_net, n_trans = results_fl$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
 
@@ -186,15 +186,15 @@ get_pnl_vb <- function(prices, group = 1,
     return(result_xts)
   } else {
     stats_mm <- get_statistics(results_mm$daily_pnl_gross,
-      results_mm$daily_pnl_net,
+      results_mm$daily_pnl_net, n_trans = results_mm$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     stats_mr <- get_statistics(results_mr$daily_pnl_gross,
-      results_mr$daily_pnl_net,
+      results_mr$daily_pnl_net, n_trans = results_mr$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     stats_fl <- get_statistics(results_fl$daily_pnl_gross,
-      results_fl$daily_pnl_net,
+      results_fl$daily_pnl_net, n_trans = results_fl$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     return(cbind(stats_mm, stats_mr, stats_fl))
@@ -350,15 +350,15 @@ get_pnl_2vb <- function(prices, group = 1,
     return(result_xts)
   } else {
     stats_mm <- get_statistics(results_mm$daily_pnl_gross,
-      results_mm$daily_pnl_net,
+      results_mm$daily_pnl_net, n_trans = results_mm$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     stats_mr <- get_statistics(results_mr$daily_pnl_gross,
-      results_mr$daily_pnl_net,
+      results_mr$daily_pnl_net, n_trans = results_mr$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     stats_fl <- get_statistics(results_fl$daily_pnl_gross,
-      results_fl$daily_pnl_net,
+      results_fl$daily_pnl_net, n_trans = results_fl$daily_n_trans,
       scale = scale_, add_info = add_stats
     )
     return(cbind(stats_mm, stats_mr, stats_fl))
