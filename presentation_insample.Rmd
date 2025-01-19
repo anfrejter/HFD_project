@@ -807,11 +807,51 @@ write.table(res_all,
 
 ## Approaches undertaken
 
-This part should describe **in short** what particular methods you used, all entry/exit techniques considered, all additional assumptions.
+In the optimization process, several methods were applied across different asset groups to identify optimal parameter combinations for high-frequency trading strategies. Three main entry techniques were tested: **Moving Average (MA), Volatility Breakout (VB), and Double Volatility Breakout (2VB).**
+
+Moving Average strategy used slow and fast moving averages as signals for entering or exiting trades. The Volatility Breakout strategy relied on volatility measures combined with predefined thresholds to generate trading signals. The Double Volatility Breakout strategy introduced stricter entry and exit conditions with separate thresholds to ensure better control over market positioning.
+
+The code implements three types of trading strategies: **momentum (mom)**, **mean reversion (mr)**, **and a dynamic regime-based strategy** (**fl**). The momentum strategy follows trends by taking a long position when the fast moving average is above the slow moving average and a short position otherwise. The mean reversion strategy works in the opposite direction, assuming prices will revert to the mean, taking a short position when the fast moving average is above the slow one. The regime-based strategy dynamically switches between momentum and mean reversion based on the market regime detected using a window and threshold. If the regime indicates a trending market, it applies momentum; otherwise, it applies mean reversion, making it adaptive to market conditions.
+
+For both sets of assets we considered following parameters in our strategies:
+
+1.  **Memory of Moving Averages**:
+
+    -   `fast_ma`: The lookback period for the fast-moving average (short-term memory) (1-100).
+
+    -   `ma_diff`: The difference between the fast and slow moving averages, effectively controlling the lookback period for the slow-moving average (1-100).
+
+2.  **Types of Moving Averages**:
+
+    -   `signal_estimator`: Defines whether to use the **mean** or **median** as the moving average calculation method.
+
+3.  **Volatility Parameters**:
+
+    -   `volat_param`: The lookback period to calculate volatility (2-100).
+
+    -   `treshold_vol`: Threshold for volatility breakout detection in the Volatility Breakout strategy.
+
+4.  **Double Volatility Breakout Parameters**:
+
+    -   `m_exit`: Defines the exit threshold for the strategy based on volatility (0.1-3).
+
+    -   `m_diff`: Controls the difference threshold for double breakout detection(0.1-3).
+
+5.  **Regime-Based Parameters**:
+
+    -   `window_regime`: The lookback period for determining market regimes (2-100).
+
+    -   `treshold_regime`: Threshold for identifying whether the market is trending or ranging, which switches between momentum and mean reversion strategies (0-0.6).
+
+**The parameter optimization process was conducted using Optuna in Python**, a hyperparameter optimization framework. The search involved defining a parameter space for moving averages, volatility windows, and thresholds, with each strategy's performance evaluated as an objective function based on metrics like net profit and Sharpe ratio. Optuna dynamically adjusted parameters during trials to explore high-performing combinations, and results were logged for detailed post-optimization analysis. Each asset group underwent separate optimization to ensure parameters were tailored to the unique characteristics of the data.
+
+------------------------------------------------------------------------
+
+This part should describe **in short** what particular methods you used, all entry/exit techniques considered, all additional assumptions. DONE
 
 For **each group of assets separately** You should also explain **WHAT different parameters** you considered (e.g. memories of moving averages, types of moving averages, types of volatility measures, memory of volatility measures, types of additional indicators, memories of additional indicators, etc.), what (if any) additional filtering rules you applied.
 
-You should also explain with details **HOW** you searched for the best combination of parameters for a particular group of assets.
+You should also explain with details **HOW** you searched for the best combination of parameters for a particular group of assets. DONE
 
 ## Finally selected strategy for **group 1**
 
@@ -825,7 +865,49 @@ Provide a **general summary** (approach and a set of **final parameters**) for a
 # here you can refer to the R codes that apply the strategy
 # for asset group 1 to all quarters (in a loop)
 
-source("apply_my_strategy_group1.R")
+#source("apply_my_strategy_group1.R")
+```
+
+```{r, echo = F, warning = F, message = F}
+load("Dataset1/data1_2022_Q1.RData")
+res_long <- get_pnl_ma(data1_2022_Q1$NQ,
+    group = 1,
+    slow_param = 30, fast_param = 10,
+    p_val = 50, tr_cost = 12, add_info = TRUE
+)
+res_long
+
+cbind(
+get_statistics(res_long$pnl_gross_mm,res_long$pnl_net_mm),
+get_statistics(res_long$pnl_gross_mr,res_long$pnl_net_mr),
+get_statistics(res_long$pnl_gross_fl,res_long$pnl_net_fl))
+
+plot_ma_ggplot(
+    prices = res_long$prices,
+    slow_m = res_long$slow_m, fast_m = res_long$fast_m,
+    position = res_long$pos_fl,
+    date = "2022-01-04"
+)
+
+plot_ma_ggplot(
+    prices = res_long$prices,
+    slow_m = res_long$slow_m, fast_m = res_long$fast_m,
+    position = res_long$pos_mm,
+    date = "2022-01-04"
+)
+
+plot_ma_ggplot(
+    prices = res_long$prices,
+    slow_m = res_long$slow_m, fast_m = res_long$fast_m,
+    position = res_long$pos_mr,
+    date = "2022-01-04"
+)
+res_short <- get_pnl_ma(data1_2022_Q1$NQ,
+    group = 1,
+    slow_param = 60, fast_param = 10,
+    p_val = 50, tr_cost = 12, add_info = FALSE, add_stats = FALSE
+)
+res_short
 ```
 
 ## Summary of results for **group 1**
