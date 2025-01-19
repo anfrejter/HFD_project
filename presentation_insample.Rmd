@@ -915,8 +915,8 @@ res_short
 ```{r, echo = F}
 names(quarter_stats.all.group1)[5] <- "av.ntrades"
 column_spec(
-kable_styling(kable(quarter_stats.all.group1[, -2], 
-                    "html", 
+kable_styling(kable(quarter_stats.all.group1[, -2],
+                    "html",
                     digits = 2,
                     align = "r"),
              font_size = 20),
@@ -1011,8 +1011,8 @@ source("apply_my_strategy_group2.R")
 ```{r, echo = F}
 names(quarter_stats.all.group2)[5] <- "av.ntrades"
 column_spec(
-kable_styling(kable(quarter_stats.all.group2[, -2], 
-                    "html", 
+kable_styling(kable(quarter_stats.all.group2[, -2],
+                    "html",
                     digits = 2,
                     align = "r"),
              font_size = 20),
