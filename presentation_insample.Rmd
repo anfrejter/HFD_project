@@ -56,7 +56,6 @@ library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -67,23 +66,19 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
-for (selected_quarter in c("2022_Q1", 
-                           "2022_Q3", "2022_Q4", 
-                           "2023_Q2", "2023_Q4", 
-                           "2024_Q1", "2024_Q2"
+for (selected_quarter in c(
+    "2022_Q1",
+    "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
 )) {
-    message(selected_quarter)
-
     filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
     load(filename_)
@@ -91,7 +86,7 @@ for (selected_quarter in c("2022_Q1",
     data.group1 <- get(paste0("data1_", selected_quarter))
 
     res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
+        prices = data.group1[, c(instrument_name2)],
         group = 1,
         slow_param = slow_ma2,
         fast_param = fast_ma2,
@@ -106,23 +101,118 @@ for (selected_quarter in c("2022_Q1",
         add_info = TRUE,
         add_stats = FALSE
     )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
     stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+        daily_2$daily_pnl_net,
+        daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 }
 
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
 
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
 
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2"
+)) {
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
 
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+}
 ```
 
 ## Summary of results for **group 1**
@@ -139,9 +229,8 @@ The results for both "gross" and "net" indicators show significant variability, 
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2022_Q1"
+selected_quarter <- "2022_Q1"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -152,67 +241,59 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    message(selected_quarter)
+load(filename_)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    load(filename_)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
 
-
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
-  
-
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from January 3, 2022, to March 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 8,000.
@@ -223,9 +304,8 @@ The chart shows the cumulative Net and Gross PnL over the period from January 3,
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2022_Q3"
+selected_quarter <- "2022_Q3"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -236,66 +316,64 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
 
-    message(selected_quarter)
+message(selected_quarter)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    load(filename_)
+load(filename_)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
-
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022, to September 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 15,000.
@@ -306,9 +384,8 @@ The chart shows the cumulative Net and Gross PnL over the period from July 1, 20
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2022_Q4"
+selected_quarter <- "2022_Q4"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -319,64 +396,63 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
 
-    message(selected_quarter)
+message(selected_quarter)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    load(filename_)
+load(filename_)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
 ```
 
@@ -388,9 +464,8 @@ The chart shows the cumulative Net and Gross PnL over the period from October 3,
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2023_Q2"
+selected_quarter <- "2023_Q2"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -401,64 +476,63 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
 
-    message(selected_quarter)
+message(selected_quarter)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    load(filename_)
+load(filename_)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
 ```
 
@@ -470,9 +544,9 @@ The chart shows the cumulative Net and Gross PnL over the period from April 3 ,2
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2023_Q4"
+selected_quarter <- "2023_Q4"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
+# 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -483,66 +557,67 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
+# m_exit2 <- 2.65975
+# m_diff2 <- 1.44789
+# m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
 
-    message(selected_quarter)
+message(selected_quarter)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    load(filename_)
+load(filename_)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
-
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from October 2 ,2023 , to December 29, 2023. It reveals that the PnL generally decreases over time, ultimately reaching a value of over -6,000 net.
@@ -553,9 +628,9 @@ The chart shows the cumulative Net and Gross PnL over the period from October 2 
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2024_Q1"
+selected_quarter <- "2024_Q1"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
+# 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -566,66 +641,67 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
+# m_exit2 <- 2.65975
+# m_diff2 <- 1.44789
+# m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
 
-    message(selected_quarter)
+message(selected_quarter)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    load(filename_)
+load(filename_)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
-
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from January 2 ,2024 , to March 25, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of almost -2,000.
@@ -636,9 +712,9 @@ The chart shows the cumulative Net and Gross PnL over the period from January 2 
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
-selected_quarter <-"2024_Q2"
+selected_quarter <- "2024_Q2"
 
-#5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
+# 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
 fast_ma2 <- 57
 ma_diff2 <- 57
 slow_ma2 <- fast_ma2 + ma_diff2
@@ -649,67 +725,67 @@ instrument_name2 <- "NQ"
 group_data2 <- 1
 volat_param2 <- 68
 m_2 <- 2.66573
-#m_exit2 <- 2.65975
-#m_diff2 <- 1.44789
-#m_entry2 <- m_exit2 + m_diff2
+# m_exit2 <- 2.65975
+# m_diff2 <- 1.44789
+# m_entry2 <- m_exit2 + m_diff2
 p_val2 <- 20
 tr_cost2 <- 12
 
-stats_all_gr1<-c()
-data_all_inst1<-c()
-data_all_inst2<-c()
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
 
 
-    message(selected_quarter)
+message(selected_quarter)
 
-    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
 
-    load(filename_)
+load(filename_)
 
-    data.group1 <- get(paste0("data1_", selected_quarter))
+data.group1 <- get(paste0("data1_", selected_quarter))
 
-    res_vb2 <- get_pnl_vb(
-        prices = data.group1[,c(instrument_name2)],
-        group = 1,
-        slow_param = slow_ma2,
-        fast_param = fast_ma2,
-        volat_param = volat_param2,
-        m_ = m_2,
-        p_val = p_val2,
-        tr_cost = tr_cost2,
-        scale_ = 252,
-        signal_estimator = signal_estimator2,
-        window_regime = window_regime2,
-        treshold_regime = treshold_regime2,
-        add_info = TRUE,
-        add_stats = FALSE
-    )
-    
-    daily_2<-get_pnl(res_vb2$pos_fl, data.group1[,c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
-    
-    stats_res <- get_statistics(daily_2$daily_pnl_gross,
-                   daily_2$daily_pnl_net,
-                   daily_2$daily_n_trans,
-                   add_info = TRUE)
-    
-    stats_res <- cbind(selected_quarter,stats_res)
-    stats_all_gr1 <-rbind(stats_all_gr1,stats_res)
-    data_all_inst2<-rbind(data_all_inst2,res_vb2)
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
 
 plot(
-  cbind(cumsum(data_all_inst2$pnl_net_fl ),
-        cumsum(data_all_inst2$pnl_gross_fl)),
-  main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-  col = c("blue", "green"),  # Kolory dla dwóch linii
-  xlab = "Time",  # Etykieta osi X
-  ylab = "Cumulative PnL",  # Etykieta osi Y
-  lwd = 2,
-
+    cbind(
+        cumsum(data_all_inst2$pnl_net_fl),
+        cumsum(data_all_inst2$pnl_gross_fl)
+    ),
+    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
+    col = c("blue", "green"), # Kolory dla dwóch linii
+    xlab = "Time", # Etykieta osi X
+    ylab = "Cumulative PnL", # Etykieta osi Y
+    lwd = 2,
 )
-
-
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of -5,000.
@@ -726,7 +802,7 @@ Provide a **general summary** (approach and a set of **final parameters**) for a
 # here you can refer to the R codes that apply the strategy
 # for asset group 2 to all quarters (in a loop)
 
-#source("apply_my_strategy_group2.R")
+# source("apply_my_strategy_group2.R")
 ```
 
 ## Summary of results for **group 2**
@@ -734,12 +810,17 @@ Provide a **general summary** (approach and a set of **final parameters**) for a
 ```{r, echo = F}
 names(quarter_stats.all.group2)[5] <- "av.ntrades"
 column_spec(
-kable_styling(kable(quarter_stats.all.group2[, -2], 
-                    "html", 
-                    digits = 2,
-                    align = "r"),
-             font_size = 20),
-1:7, width = "30em")
+    kable_styling(
+        kable(quarter_stats.all.group2[, -2],
+            "html",
+            digits = 2,
+            align = "r"
+        ),
+        font_size = 20
+    ),
+    1:7,
+    width = "30em"
+)
 
 # more options here:
 # https://haozhu233.github.io/kableExtra/awesome_table_in_html.html
@@ -751,7 +832,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2022_Q1.png")
-
 ```
 
 your comments required !!!
@@ -760,7 +840,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2022_Q3.png")
-
 ```
 
 your comments required !!!
@@ -769,7 +848,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2022_Q4.png")
-
 ```
 
 your comments required !!!
@@ -778,7 +856,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2023_Q2.png")
-
 ```
 
 your comments required !!!
@@ -787,7 +864,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2023_Q4.png")
-
 ```
 
 your comments required !!!
@@ -796,7 +872,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2024_Q1.png")
-
 ```
 
 your comments required !!!
@@ -805,7 +880,6 @@ your comments required !!!
 
 ```{r, echo = F, out.width ='100%'}
 knitr::include_graphics("pnl_group2_2024_Q2.png")
-
 ```
 
 your comments required !!!
