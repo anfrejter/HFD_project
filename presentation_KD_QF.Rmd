@@ -1,10 +1,14 @@
 ---
 title: "Quantitative strategies on High Frequency Data"
-subtitle: "Final Project"
-author: "Team members: Katarzyna Dybcio430189 and Quoc Frejter 430201"
+author: 'Team members: Katarzyna Dybcio430189 and Quoc Frejter 430201'
 date: "Academic year 2024/2025"
-output: ioslides_presentation
-fontsize: 10pt
+output:
+  ioslides_presentation:
+    widescreen: true
+    smaller: true
+  slidy_presentation: default
+subtitle: Final Project
+fontsize: 9pt
 ---
 
 ## Approaches undertaken
@@ -16,9 +20,7 @@ Moving Average strategy used slow and fast moving averages as signals for enteri
 The code implements three types of trading strategies: **momentum (mom)**, **mean reversion (mr)**, and a **dynamic regime-based strategy** (**fl**).
 
 -   **Momentum Strategy**: This strategy follows trends by taking a long position when the fast moving average is above the slow moving average and a short position otherwise. It assumes that prices will continue moving in the direction of the trend..
-
 -   **Mean Reversion Strategy**: This strategy operates on the opposite principle, assuming prices will revert to their mean. It takes a short position when the fast moving average is above the slow moving average and a long position when it is below.
-
 -   **Dynamic Regime-Based Strategy**: This adaptive approach switches between momentum and mean reversion strategies based on the detected market regime. The market regime is determined using rolling windows and thresholds, with the type of regime (momentum or reversal) detected through the **correlation** of price movements. If the regime indicates a trending market, the strategy applies momentum; otherwise, it applies mean reversion.
 
 ## Parameters selection
@@ -28,27 +30,22 @@ For both sets of assets we considered following parameters in our strategies:
 1.  **Memory of Moving Averages**:
 
     -   **`fast_ma`**: Period for the fast moving average (1–60). Smaller values make it more sensitive to price changes.
-
     -   **`ma_diff`**: Difference between fast and slow moving averages (1–60). Defines the gap for signal generation.
-
-    -   `signal_estimator`: Defines whether to use the **mean** or **median** as the moving average calculation method.
+    -   **`signal_estimator`**: Defines whether to use the **mean** or **median** as the moving average calculation method.
 
 2.  **Volatility Parameters**:
 
-    -   `volat_param`: The lookback period to calculate volatility (2-100).
-
-    -   `treshold_vol`: Threshold for volatility breakout detection in the Volatility Breakout strategy.
+    -   **`volat_param`**: The lookback period to calculate volatility (2-100).
+    -   **`treshold_vol`**: Threshold for volatility breakout detection in the Volatility Breakout strategy.
 
 3.  **Double Volatility Breakout Parameters**:
 
-    -   `m_exit`: Defines the exit threshold for the strategy based on volatility (0.1-3).
-
-    -   `m_diff`: Controls the difference threshold for double breakout detection(0.1-3).
+    -   **`m_exit`**: Defines the exit threshold for the strategy based on volatility (0.1-3).
+    -   **`m_diff`**: Controls the difference threshold for double breakout detection(0.1-3).
 
 4.  **Market Regime Detection**
 
     -   **`window_regime`**: Rolling window size to detect market regimes (2–100). Larger values capture longer-term trends.
-
     -   **`treshold_regime`**: Threshold for identifying market regimes (0–0.8). Determines when to switch between momentum and mean reversion.
 
 ## Parameters optimalization
@@ -61,7 +58,7 @@ The strategies showed that overfitting to highly profitable trades can affect lo
 
 The **Volatility Breakout (VB)** strategy for Group 1 assets was chosen. We trade only one selected assets NQ. Strategy is based on detecting price breakouts using a combination of moving averages (MA57 and MA114) and volatility parameters ( `volatility memory window = 68` ). Signals are smoothed using the mean estimator, and regime detection is performed via rolling windows (`window_regime = 40` ). A dynamic, regime-based approach (fl) is employed to adapt the strategy to varying market conditions.
 
-```{r, echo = F}
+```{r, echo = F, warning = F, message = F}
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
@@ -203,17 +200,19 @@ stats_res <- cbind(selected_quarter, stats_res)
 stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from January 3, 2022, to March 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 8,000.
@@ -282,18 +281,17 @@ stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
-
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022, to September 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 15,000.
@@ -362,18 +360,17 @@ stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
-
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from October 3, 2022, to December 30, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 10,000.
@@ -442,18 +439,17 @@ stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
-
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from April 3 ,2023 , to June 30, 2023. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of almost 4,000 net.
@@ -526,18 +522,17 @@ stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
-
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from October 2 ,2023 , to December 29, 2023. It reveals that the PnL generally decreases over time, ultimately reaching a value of over -6,000 net.
@@ -610,18 +605,17 @@ stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
-
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from January 2 ,2024 , to March 25, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of almost -2,000.
@@ -694,18 +688,17 @@ stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
 
-
-plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of -5,000.
@@ -839,7 +832,7 @@ The table summarizes the performance of the strategy across different quarters, 
 
 ## PnL of results for **group 2** -- quarter 2022Q1
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 library(kableExtra)
 source("helpers/strategies.R")
 source("helpers/plots.R")
@@ -939,25 +932,25 @@ data_all_inst2 <- c()
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
     
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
-
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 ```
 
 After the first quarter, only a few trades were executed, with the final one being the only profitable trade. However, the overall PnL ended up around -1000.
 
 ## PnL of results for **group 2** -- quarter 2022Q3
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2022_Q3"
 
 library(kableExtra)
@@ -1058,18 +1051,18 @@ data_all_inst2 <- c()
     stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
-    
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+ 
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 
 ```
 
@@ -1077,7 +1070,7 @@ While there were more profitable trades earlier, the final trades were not profi
 
 ## PnL of results for **group 2** -- quarter 2022Q4
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2022_Q4"
 
 library(kableExtra)
@@ -1179,17 +1172,18 @@ data_all_inst2 <- c()
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
     
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+  par(mar = c(4, 4, 2, 1))
+    
+  plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 
 ```
 
@@ -1197,7 +1191,7 @@ During this quarter, the PnL increases to 6000, with the majority of the profits
 
 ## PnL of results for **group 2** -- quarter 2023Q2
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2023_Q2"
 
 library(kableExtra)
@@ -1299,17 +1293,17 @@ data_all_inst2 <- c()
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
     
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 
 ```
 
@@ -1317,7 +1311,7 @@ Throughout this quarter, a significant number of trades were executed, but the m
 
 ## PnL of results for **group 2** -- quarter 2023Q4
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2023_Q4"
 
 library(kableExtra)
@@ -1419,17 +1413,18 @@ data_all_inst2 <- c()
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
     
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+    
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 
 ```
 
@@ -1437,7 +1432,7 @@ The final net PnL for this quarter stands at approximately 3000, with the bulk o
 
 ## PnL of results for **group 2** -- quarter 2024Q1
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2024_Q1"
 
 library(kableExtra)
@@ -1539,17 +1534,17 @@ data_all_inst2 <- c()
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
     
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 
 ```
 
@@ -1557,7 +1552,7 @@ Two profitable trades were executed during this quarter, but the final net PnL e
 
 ## PnL of results for **group 2** -- quarter 2024Q2
 
-```{r, echo = F, out.width ='100%'}
+```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2024_Q2"
 
 library(kableExtra)
@@ -1659,17 +1654,17 @@ data_all_inst2 <- c()
     data_all_inst1 <- rbind(data_all_inst1, res_vb1)
     data_all_inst2 <- rbind(data_all_inst2, res_vb2)
     
-    plot(
-    cbind(
-        cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
-        cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)
-    ),
-    main = "Cumulative PnL (Net and Gross)", # Tytuł wykresu
-    col = c("blue", "green"), # Kolory dla dwóch linii
-    xlab = "Time", # Etykieta osi X
-    ylab = "Cumulative PnL", # Etykieta osi Y
-    lwd = 2,
-)
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
 
 ```
 
