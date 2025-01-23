@@ -149,12 +149,13 @@ get_pnl_vb <- function(prices, group = 1,
     strategy = "mom"
   )
 
+  pos_mm <- ifelse(pos_flat == 1, 0, pos_mm)
+  pos_mm[is.na(prices)] <- 0
   pos_mm[is.na(pos_mm)] <- 0
   pos_mr <- -pos_mm
 
   mom_regime <- get_regime(prices, window = window_regime, treshold = treshold_regime)
   pos_fl <- ifelse(mom_regime == 1, pos_mm, pos_mr)
-  pos_fl[is.na(prices)] <- 0
 
   results_mm <- get_pnl(pos_mm, prices, p_val, tr_cost, add_info = add_info)
   results_mr <- get_pnl(pos_mr, prices, p_val, tr_cost, add_info = add_info)
@@ -313,12 +314,13 @@ get_pnl_2vb <- function(prices, group = 1,
     strategy = "mom"
   )
 
+  pos_mm <- ifelse(pos_flat == 1, 0, pos_mm)
+  pos_mm[is.na(prices)] <- 0
   pos_mm[is.na(pos_mm)] <- 0
   pos_mr <- -pos_mm
 
   mom_regime <- get_regime(prices, window = window_regime, treshold = treshold_regime)
   pos_fl <- ifelse(mom_regime == 1, pos_mm, pos_mr)
-  pos_fl[is.na(prices)] <- 0
 
   results_mm <- get_pnl(pos_mm, prices, p_val, tr_cost, add_info = add_info)
   results_mr <- get_pnl(pos_mr, prices, p_val, tr_cost, add_info = add_info)
