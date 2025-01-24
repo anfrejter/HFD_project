@@ -1,0 +1,2639 @@
+---
+title: "Quantitative strategies on High Frequency Data"
+author: 'Team members: Katarzyna Dybcio 430189 and Quoc Frejter 430201'
+date: "Academic year 2024/2025"
+output:
+  ioslides_presentation:
+    widescreen: true
+    smaller: true
+  slidy_presentation: default
+subtitle: Final Project
+fontsize: 9pt
+---
+
+## Approaches undertaken
+
+In the optimization process, several methods were applied across different asset groups to identify optimal parameter combinations for high-frequency trading strategies. Three main entry techniques were tested: **Moving Average (MA), Volatility Breakout (VB), and Double Volatility Breakout (2VB).**
+
+Moving Average strategy used slow and fast moving averages as signals for entering or exiting trades. The Volatility Breakout strategy relied on volatility measures combined with predefined thresholds to generate trading signals. The Double Volatility Breakout strategy introduced stricter entry and exit conditions with separate thresholds to ensure better control over market positioning.
+
+The code implements three types of trading strategies: **momentum (mom)**, **mean reversion (mr)**, and a **dynamic regime-based strategy** (**fl**).
+
+-   **Momentum Strategy**: This strategy follows trends by taking a long position when the fast moving average is above the slow moving average and a short position otherwise. It assumes that prices will continue moving in the direction of the trend..
+-   **Mean Reversion Strategy**: This strategy operates on the opposite principle, assuming prices will revert to their mean. It takes a short position when the fast moving average is above the slow moving average and a long position when it is below.
+-   **Dynamic Regime-Based Strategy**: This adaptive approach switches between momentum and mean reversion strategies based on the detected market regime. The market regime is determined using rolling windows and thresholds, with the type of regime (momentum or reversal) detected through the **correlation** of price movements. If the regime indicates a trending market, the strategy applies momentum; otherwise, it applies mean reversion.
+
+## Parameters selection
+
+For both sets of assets we considered following parameters in our strategies:
+
+1.  **Memory of Moving Averages**:
+
+    -   **`fast_ma`**: Period for the fast moving average (1–60). Smaller values make it more sensitive to price changes.
+    -   **`ma_diff`**: Difference between fast and slow moving averages (1–60). Defines the gap for signal generation.
+    -   **`signal_estimator`**: Defines whether to use the **mean** or **median** as the moving average calculation method.
+
+2.  **Volatility Parameters**:
+
+    -   **`volat_param`**: The lookback period to calculate volatility (2-100).
+    -   **`treshold_vol`**: Threshold for volatility breakout detection in the Volatility Breakout strategy.
+
+3.  **Double Volatility Breakout Parameters**:
+
+    -   **`m_exit`**: Defines the exit threshold for the strategy based on volatility (0.1-3).
+    -   **`m_diff`**: Controls the difference threshold for double breakout detection(0.1-3).
+
+4.  **Market Regime Detection**
+
+    -   **`window_regime`**: Rolling window size to detect market regimes (2–100). Larger values capture longer-term trends.
+    -   **`treshold_regime`**: Threshold for identifying market regimes (0–0.8). Determines when to switch between momentum and mean reversion.
+
+## Parameters optimalization
+
+**The parameter optimization process was conducted using Optuna in Python**, a hyperparameter optimization framework. The search involved defining a parameter space for moving averages, volatility windows, and thresholds, with each strategy's performance evaluated as an objective function based on metrics like net profit and Sharpe ratio. Optuna dynamically adjusted parameters during trials to explore high-performing combinations, and results were logged for detailed post-optimization analysis. Each asset group underwent separate optimization to ensure parameters were tailored to the unique characteristics of the data.
+
+The strategies showed that overfitting to highly profitable trades can affect long-term sustainability, especially given the optimization approach in Optuna. To mitigate this, I adjusted the optimization function by adding a penalty based on the mean and standard deviation of the statistics, aiming to reduce the overfitting risk and improve overall strategy robustness.
+
+## Finally selected strategy for **group 1**
+
+The **Volatility Breakout (VB)** strategy for Group 1 assets was chosen. We trade only one selected assets NQ. Strategy is based on detecting price breakouts using a combination of moving averages (MA57 and MA114) and volatility parameters ( `volatility memory window = 68` ). Signals are smoothed using the mean estimator, and regime detection is performed via rolling windows (`window_regime = 40` ). A dynamic, regime-based approach (fl) is employed to adapt the strategy to varying market conditions.
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+for (selected_quarter in c(
+    "2022_Q1",
+    "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2",
+    "2022_Q2", "2023_Q1", "2023_Q3", "2024_Q3", "2024_Q4"#out of sample
+)) {
+    filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group1 <- get(paste0("data1_", selected_quarter))
+
+    res_vb2 <- get_pnl_vb(
+        prices = data.group1[, c(instrument_name2)],
+        group = 1,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        m_ = m_2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_2$daily_pnl_gross,
+        daily_2$daily_pnl_net,
+        daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+}
+
+```
+
+## Summary of results for **group 1**
+
+```{r, echo = F}
+stats_all_gr1 %>%
+  kbl(caption = "Trading Strategy Performance by Quarter") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, 
+                position = "left") %>%
+  column_spec(6, bold = T, background = "lightblue") %>% 
+  column_spec(8:9, color = "black", background = "lightgreen") %>%
+  add_header_above(c(" " = 1, "Sharpe Ratios" = 2, "Cumulative Returns" = 2, 
+                     "Statistics" = 2, "PNL" = 2))
+```
+
+The results for both "gross" and "net" indicators show significant variability, with notable declines in 2023 and the first half of 2024. Specifically, 2023_Q4 and 2024_Q1 and 2024_Q2 exhibit negative values, suggesting a decrease in performance during the analyzed period.
+
+## PnL of results for **group 1** -- quarter 2022Q1
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2022_Q1"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from January 3, 2022, to March 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 8,000.
+
+## PnL of results for **group 1** -- quarter 2022Q2 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2022_Q2"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
+```
+
+## PnL of results for **group 1** -- quarter 2022Q3
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2022_Q3"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+message(selected_quarter)
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022, to September 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 15,000.
+
+## PnL of results for **group 1** -- quarter 2022Q4
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2022_Q4"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+message(selected_quarter)
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from October 3, 2022, to December 30, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 10,000.
+
+## PnL of results for **group 1** -- quarter 2023Q1 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2023_Q1"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
+```
+
+## PnL of results for **group 1** -- quarter 2023Q2
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2023_Q2"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+message(selected_quarter)
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from April 3 ,2023 , to June 30, 2023. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of almost 4,000 net.
+
+## PnL of results for **group 1** -- quarter 2023Q3 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2023_Q3"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
+```
+
+
+## PnL of results for **group 1** -- quarter 2023Q4
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2023_Q4"
+
+# 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+# m_exit2 <- 2.65975
+# m_diff2 <- 1.44789
+# m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+message(selected_quarter)
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from October 2 ,2023 , to December 29, 2023. It reveals that the PnL generally decreases over time, ultimately reaching a value of over -6,000 net.
+
+## PnL of results for **group 1** -- quarter 2024Q1
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2024_Q1"
+
+# 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+# m_exit2 <- 2.65975
+# m_diff2 <- 1.44789
+# m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+message(selected_quarter)
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from January 2 ,2024 , to March 25, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of almost -2,000.
+
+## PnL of results for **group 1** -- quarter 2024Q2
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2024_Q2"
+
+# 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+# m_exit2 <- 2.65975
+# m_diff2 <- 1.44789
+# m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+message(selected_quarter)
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+
+par(mar = c(4, 4, 2, 1))
+plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of -5,000.
+
+## PnL of results for **group 1** -- quarter 2024Q3 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2024_Q3"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
+```
+## PnL of results for **group 1** -- quarter 2024Q4 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter <- "2024_Q4"
+
+fast_ma2 <- 57
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "mean"
+window_regime2 <- 40
+treshold_regime2 <- 0.64827
+instrument_name2 <- "NQ"
+group_data2 <- 1
+volat_param2 <- 68
+m_2 <- 2.66573
+p_val2 <- 20
+tr_cost2 <- 12
+
+stats_all_gr1 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+filename_ <- paste0("Dataset1/data1_", selected_quarter, ".RData")
+
+load(filename_)
+
+data.group1 <- get(paste0("data1_", selected_quarter))
+
+res_vb2 <- get_pnl_vb(
+    prices = data.group1[, c(instrument_name2)],
+    group = 1,
+    slow_param = slow_ma2,
+    fast_param = fast_ma2,
+    volat_param = volat_param2,
+    m_ = m_2,
+    p_val = p_val2,
+    tr_cost = tr_cost2,
+    scale_ = 252,
+    signal_estimator = signal_estimator2,
+    window_regime = window_regime2,
+    treshold_regime = treshold_regime2,
+    add_info = TRUE,
+    add_stats = FALSE
+)
+
+daily_2 <- get_pnl(res_vb2$pos_fl, data.group1[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+stats_res <- get_statistics(daily_2$daily_pnl_gross,
+    daily_2$daily_pnl_net,
+    daily_2$daily_n_trans,
+    add_info = TRUE
+)
+
+stats_res <- cbind(selected_quarter, stats_res)
+stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
+data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+
+par(mar = c(4, 4, 2, 1))  
+ 
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 1 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+ 
+```
+## Finally selected strategy for **group 2**
+
+The *Double Volatility Breakout (VB)* strategy for Group 2 assets was chosen. In this case, we trade two selected instruments: XAG and XAU. The strategy is based on detecting price breakouts using a combination of moving averages and volatility parameters. For XAG, the moving averages are configured as MA51 (fast) and MA140 (slow), while for XAU, they are set to MA58 (fast) and MA115 (slow). Volatility parameters are set to 72 for XAG and 73 for XAU, respectively.
+
+Signals for XAG are smoothed using the *mean* estimator, while for XAU, a *median* estimator is applied. Regime detection is performed through rolling windows with parameters window_regime = 98 for XAG and window_regime = 22 for XAU. Entry and exit thresholds for both instruments are dynamically adjusted, with XAG using m_entry = 3.63864 and m_exit = 1.79056, and XAU using m_entry = 2.026 and m_exit = 0.10742.
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+for (selected_quarter in c(
+    "2022_Q1", "2022_Q3", "2022_Q4",
+    "2023_Q2", "2023_Q4",
+    "2024_Q1", "2024_Q2",
+    "2022_Q2", "2023_Q1", "2023_Q3", "2024_Q3", "2024_Q4"#out of sample
+)) {
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+    daily_1 <- c()
+    daily_2 <- c()
+    res_vb1<- c()
+    res_vb2 <- c()
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    stats_res <- c()
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+}
+```
+
+## Summary of results for **group 2**
+
+```{r, echo = F}
+stats_all_gr2 %>%
+  kbl(caption = "Trading Strategy Performance by Quarter") %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed", "responsive"), 
+                full_width = F, 
+                position = "left") %>%
+  column_spec(6, bold = T, background = "lightblue") %>% 
+  column_spec(8:9, color = "black", background = "lightgreen") %>%
+  add_header_above(c(" " = 1, "Sharpe Ratios" = 2, "Cumulative Returns" = 2, 
+                     "Statistics" = 2, "PNL" = 2)) %>%
+  footnote(general = "'Inf' in the grossCR column indicates a division by zero in maxdrawdown (no significant drawdown).")
+```
+
+The table summarizes the performance of the strategy across different quarters, showing variability in both gross and net Sharpe Ratios (SR) and Calmar Ratios (CR). While some quarters, like 2022_Q3, 2022_Q4, and 2024_Q2, exhibit strong positive results (e.g., high net CR of 2855.91 in 2024_Q2), others, such as 2022_Q1 and 2024_Q1, demonstrate negative performance, indicating challenges in those periods.
+
+## PnL of results for **group 2** -- quarter 2022Q1
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter<- "2022_Q1"
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+After the first quarter, only a few trades were executed, with the final one being the only profitable trade. However, the overall PnL ended up around -1000.
+## PnL of results for **group 2** -- quarter 2022Q2 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter<- "2022_Q2"
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+## PnL of results for **group 2** -- quarter 2022Q3
+
+```{r, echo = F, warning = F, message = F}
+selected_quarter<- "2022_Q3"
+
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+res_vb1 <- c()
+res_vb2 <- c()
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+    
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+library(openxlsx)
+
+
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+
+```
+
+While there were more profitable trades earlier, the final trades were not profitable, resulting in an overall net PnL of around 0
+
+## PnL of results for **group 2** -- quarter 2022Q4
+
+```{r, echo = F, warning = F, message = F}
+selected_quarter<- "2022_Q4"
+
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+  par(mar = c(4, 4, 2, 1))
+    
+  plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+
+```
+
+During this quarter, the PnL increases to 6000, with the majority of the profits coming from just two trades.
+
+## PnL of results for **group 2** -- quarter 2023Q1 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter<- "2023_Q1"
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+
+## PnL of results for **group 2** -- quarter 2023Q2
+
+```{r, echo = F, warning = F, message = F}
+selected_quarter<- "2023_Q2"
+
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+
+```
+
+Throughout this quarter, a significant number of trades were executed, but the majority were unprofitable. As a result, the final net PnL ended at approximately zero.
+
+## PnL of results for **group 2** -- quarter 2023Q3 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter<- "2023_Q3"
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+## PnL of results for **group 2** -- quarter 2023Q4
+
+```{r, echo = F, warning = F, message = F}
+selected_quarter<- "2023_Q4"
+
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+    
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+
+```
+
+The final net PnL for this quarter stands at approximately 3000, with the bulk of the profits generated from a single trade.
+
+## PnL of results for **group 2** -- quarter 2024Q1
+
+```{r, echo = F, warning = F, message = F}
+selected_quarter<- "2024_Q1"
+
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+
+```
+
+Two profitable trades were executed during this quarter, but the final net PnL ended at approximately -1000.
+
+## PnL of results for **group 2** -- quarter 2024Q2
+
+```{r, echo = F, warning = F, message = F}
+selected_quarter<- "2024_Q2"
+
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ par(mar = c(4, 4, 2, 1))   
+ plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+
+```
+
+Three significant trades were executed during this period, resulting in a final net PnL of approximately 12,000.
+
+## PnL of results for **group 2** -- quarter 2024Q3 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter<- "2024_Q3"
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+## PnL of results for **group 2** -- quarter 2024Q4 -- out of sample
+
+```{r, echo = F, warning = F, message = F}
+library(kableExtra)
+source("helpers/strategies.R")
+source("helpers/plots.R")
+selected_quarter<- "2024_Q4"
+fast_ma1 <- 51
+ma_diff1 <- 89
+slow_ma1 <- fast_ma1 + ma_diff1
+signal_estimator1 <- "mean"
+window_regime1 <- 98
+treshold_regime1 <- 0.07867
+instrument_name1 <- "XAG"
+group_data1 <- 2
+volat_param1 <- 72
+m_exit1 <- 1.79056
+m_diff1 <- 1.84808
+m_entry1 <- m_exit1 + m_diff1
+p_val1 <- 5000
+tr_cost1 <- 10
+
+fast_ma2 <- 58
+ma_diff2 <- 57
+slow_ma2 <- fast_ma2 + ma_diff2
+signal_estimator2 <- "median"
+window_regime2 <- 22
+treshold_regime2 <- 0.57713
+instrument_name2 <- "XAU"
+group_data2 <- 2
+volat_param2 <- 73
+# m_2 <- 2.66573
+m_exit2 <- 0.10742
+m_diff2 <- 1.91858
+m_entry2 <- m_exit2 + m_diff2
+p_val2 <- 100
+tr_cost2 <- 15
+
+stats_all_gr2 <- c()
+data_all_inst1 <- c()
+data_all_inst2 <- c()
+
+
+    filename_ <- paste0("Dataset2/data2_", selected_quarter, ".RData")
+
+    load(filename_)
+
+    data.group2 <- get(paste0("data2_", selected_quarter))
+
+    res_vb1 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name1)],
+        group = 2,
+        slow_param = slow_ma1,
+        fast_param = fast_ma1,
+        volat_param = volat_param1,
+        # m_ = m_1,
+        m_exit = m_exit1,
+        m_entry = m_entry1,
+        p_val = p_val1,
+        tr_cost = tr_cost1,
+        scale_ = 252,
+        signal_estimator = signal_estimator1,
+        window_regime = window_regime1,
+        treshold_regime = treshold_regime1,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    res_vb2 <- get_pnl_2vb(
+        prices = data.group2[, c(instrument_name2)],
+        group = 2,
+        slow_param = slow_ma2,
+        fast_param = fast_ma2,
+        volat_param = volat_param2,
+        # m_ = m_1,
+        m_exit = m_exit2,
+        m_entry = m_entry2,
+        p_val = p_val2,
+        tr_cost = tr_cost2,
+        scale_ = 252,
+        signal_estimator = signal_estimator2,
+        window_regime = window_regime2,
+        treshold_regime = treshold_regime2,
+        add_info = TRUE,
+        add_stats = FALSE
+    )
+
+    daily_1 <- get_pnl(res_vb1$pos_fl, data.group2[, c(instrument_name1)], p_val1, tr_cost1, add_info = FALSE)
+
+    daily_2 <- get_pnl(res_vb2$pos_fl, data.group2[, c(instrument_name2)], p_val2, tr_cost2, add_info = FALSE)
+
+    stats_res <- get_statistics(daily_1$daily_pnl_gross+daily_2$daily_pnl_gross,
+        daily_1$daily_pnl_net + daily_2$daily_pnl_net,
+        daily_1$daily_n_trans+daily_2$daily_n_trans,
+        add_info = TRUE
+    )
+
+    stats_res <- cbind(selected_quarter, stats_res)
+    stats_all_gr2 <- rbind(stats_all_gr2, stats_res)
+    data_all_inst1 <- rbind(data_all_inst1, res_vb1)
+    data_all_inst2 <- rbind(data_all_inst2, res_vb2)
+    
+ 
+par(mar = c(4, 4, 2, 1))
+    plot(cbind(cumsum(data_all_inst2$pnl_net_fl+data_all_inst1$pnl_net_fl),
+               cumsum(data_all_inst2$pnl_gross_fl+data_all_inst1$pnl_gross_fl)),
+         multi.panel = FALSE,
+         main = paste0("Gross and net PnL for asset group 2 \n quarter ", selected_quarter), 
+         col = c("#377EB8", "#E41A1C"),
+         major.ticks = "weeks", 
+         grid.ticks.on = "weeks",
+         grid.ticks.lty = 3,
+         legend.loc = "topleft",
+         cex = 0.5)
+```
+## Summary and conclusions
+
+-   The strategy applied to Group 1 data achieved an overall positive net return of approximately 20,700. However, the profits were inconsistent, with the majority of gains generated during two months, while the rest of the months saw losses. This suggests that the strategy may have overfitted to a few highly profitable trades, rather than exhibiting sustainable performance across the entire period. On average, around 1-2 trades were made per day, with one quarter seeing as many as 13 trades per day on average. Interestingly, the month with the highest number of trades was not profitable, further highlighting the strategy's inconsistency.
+
+-   The strategy applied to Group 2 generated a net profit of 27,397.6, though the performance was not entirely consistent. However, it demonstrated more stability than Group 1. Profits were distributed across four months, with the final month accounting for nearly half of the total profits. Several trades were made, averaging less than one per day.
+
+-   Both strategies displayed positive returns but with notable inconsistencies. Group 2 performed more consistently than Group 1, but both groups saw the highest profits concentrated in a few months, with some months experiencing losses. The strategies showed that overfitting to highly profitable trades can affect long-term sustainability, and the number of trades did not always correlate with profitability.
