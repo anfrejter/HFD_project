@@ -9,7 +9,7 @@ subtitle: Final Project
 fontsize: 12pt
 ---
 
-## Approaches undertaken
+# Approaches undertaken
 
 In the optimization process, several methods were applied across different asset groups to identify optimal parameter combinations for high-frequency trading strategies. Three main entry techniques were tested: **Moving Average (MA), Volatility Breakout (VB), and Double Volatility Breakout (2VB).**
 
@@ -59,13 +59,34 @@ $\frac{\sum_{i=1}^n stat_{i}}{n} - \frac{1}{2}\sqrt{\frac{\sum_{i=1}^n (stat_{i}
 
 This new function incorporates a penalty for standard deviation, weighted by $\frac{1}{2}$, to balance performance consistency with high returns.
 
-## Framework
+## Hyperparameter Optimization Workflow
+
+Hyperparameter optimization was performed using the Python script `run_hp_tuning.py`. This script integrates parameter selection, strategy execution, and evaluation into a streamlined process. The key tasks performed by the script are as follows:
+
+1.  **Parameter Selection with Optuna**:\
+    Optuna dynamically selects hyperparameters to test during each trial.
+
+2.  **Execution of R Scripts**:\
+    The script calls R functions with the selected parameters to execute various strategies, including:
+
+    -   `run_strat_ma.R`: Executes the **Moving Average** strategy.
+
+    -   `run_strat_vb.R`: Executes the **Volatility Breakout** strategy.
+
+    -   `run_strat_2vb.R`: Executes the **Double Volatility Breakout** strategy.
+
+3.  **Evaluation of Results**:\
+    After running the strategies, the results from the trial are evaluated.
+
+The process loops back to step 1, with Optuna refining the parameter selection, until the predefined number of trials has been completed.
 
 # Group 1 -- summary of results (including out-of-sample)
 
 ## Finally selected strategy for **group 1**
 
-The **Volatility Breakout (VB)** strategy for Group 1 assets was chosen. We trade only one selected asset NQ, with point vale of 20\$ and transaction cost of 12\$. Strategy is based on detecting price breakouts using a combination of moving averages (**MA57** and **MA114**). **Volatility memory window** was set to **68**, allowing the strategy to adjust based on recent volatility. Signals are smoothed using the **mean estimator**, which helps to reduce noise and improve the quality of trade signals. Regime detection is performed via rolling windows (**window_regime = 40** ). A dynamic, regime-based approach (**fl**) is employed to adapt the strategy to varying market conditions.
+The Volatility Breakout (VB) strategy was selected for Group 1 assets, focusing on a single instrument, NQ. This asset has a point value of \$20 and a transaction cost of \$12. The strategy identifies price breakouts by utilizing a combination of moving averages: MA57 (fast) and MA114 (slow). The volatility memory window is set to 68, allowing the strategy to adjust dynamically to recent volatility trends.
+
+The breakout multiplier is set to 2.66573, which is relatively wide, suggesting that multiple transactions are likely to occur. Price signals are smoothed using a mean estimator, helping to filter out noise and enhance the quality of trade signals. Regime detection is carried out using rolling windows, with a `window_regime` value of 40. Additionally, a dynamic, regime-based approach (fl) is employed, enabling the strategy to adapt to shifting market conditions.
 
 ```{r, echo = F, warning = F, message = F}
 library(kableExtra)
@@ -169,11 +190,13 @@ stats_all_gr1 %>%
   autofit()
 ```
 
-The results for both "gross" and "net" indicators show significant variability, with notable declines in 2023 and the first half of 2024 for in sample data. Specifically, 2023_Q4 and 2024_Q1 and 2024_Q2 exhibit negative values, suggesting a decrease in performance during the analyzed period.
+The results for both "gross" and "net" indicators show significant variability, with notable declines in 2023 and the first half of 2024 for in sample data. Specifically, **2023_Q4** and **2024_Q1** and **2024_Q2** exhibit negative values, suggesting a decrease in performance during the analyzed period.
 
-The "stat"reaches its peak in 2022_Q4 (2,187.12), correlating with high profitability, while very low values, like -6.17 in 2023_Q4, indicate poor performance. Also in 2022_Q4 extraordinary high Gross and Net Calmar ratio was observed.
+The **Gross Calmar Ratio** and **Net Calmar Ratio** reached extraordinary highs in **2022_Q4**, with **grossCR** at **70,789.95** and **netCR** at **905.10**, signaling excellent returns relative to drawdowns. However, in subsequent quarters, these ratios fell sharply, especially in the latter half of 2023 and into 2024.
 
-When it comes to out of sample data, our strategy was backtested on 2022_Q2, 2023_Q1, 2023_Q3, 2024_Q3 and 2024_Q4. As presented in table above, only in 2022_Q2 and 2023_Q3 our strategy resulted in positive net profit. In 2023_Q3 only gross profit was positive, but due to transaction cost, net profit was negative. Only in 2022_Q2 "stat" reached positive value of 35.64.
+The **stat** reaches its peak in **2022_Q4** (2,187.12), correlating with high profitability, while very low values, like -6.17 in 2023_Q4, indicate poor performance. Additionally, **2022_Q4** saw extraordinarily high Gross and Net Calmar Ratios, reflecting exceptional returns relative to drawdown during that period.
+
+When it comes to out of sample data, our strategy was backtested on **2022_Q2**, **2023_Q1**, **2023_Q3**, **2024_Q3** and **2024_Q4**. As presented in table above, only in **2022_Q2** and **2023_Q3** our strategy resulted in positive net profit. In 2023_Q3 only gross profit was positive, but due to transaction cost, net profit was negative. Only in **2022_Q2** "stat" reached positive value of 35.64.
 
 ## PnL of results for **group 1** -- quarter 2022Q1
 
@@ -1086,11 +1109,17 @@ par(mar = c(4, 4, 2, 1))
 
 The chart shows the cumulative Net and Gross PnL over the period October 1, 2024, to December 31, 2024 created based on out of sample data. At the start of the period, both Net and Gross PnL perform an upward trend. At the end of December huge drop was observed, resulting in negative net PnL reaching value of -500.
 
+# Group 2 -- summary of results (including out-of-sample)
+
 ## Finally selected strategy for **group 2**
 
-The *Double Volatility Breakout (VB)* strategy for Group 2 assets was chosen. In this case, we trade two selected instruments: XAG, with point value of 5000\$ and transaction cost of 10\$ and XAU with point value of 100\$ and transaction cost of 15\$. The strategy is based on detecting price breakouts using a combination of moving averages and volatility parameters. For XAG, the moving averages are configured as MA51 (fast) and MA140 (slow), while for XAU, they are set to MA58 (fast) and MA115 (slow). Volatility parameters are set to 72 for XAG and 73 for XAU, respectively.
+The Double Volatility Breakout (VB) strategy was selected for Group 2 assets. This strategy involves trading two instruments: XAG, with a point value of \$5000 and a transaction cost of \$10, and XAU, with a point value of \$100 and a transaction cost of \$15. The strategy identifies price breakouts using a combination of moving averages and volatility parameters.
 
-Signals for XAG are smoothed using the *mean* estimator, while for XAU, a *median* estimator is applied. Regime detection is performed through rolling windows with parameters window_regime = 98 for XAG and window_regime = 22 for XAU. Entry and exit thresholds for both instruments are dynamically adjusted, with XAG using m_entry = 3.63864 and m_exit = 1.79056, and XAU using m_entry = 2.026 and m_exit = 0.10742.
+For XAG, the moving averages are configured as MA51 (fast) and MA140 (slow), while for XAU, they are set to MA58 (fast) and MA115 (slow). Volatility parameters are set to 72 for XAG and 73 for XAU, respectively.
+
+Price signals for XAG are smoothed using a mean estimator, while a median estimator is applied for XAU. Regime detection is performed using rolling windows, with `window_regime = 98` for XAG and `window_regime = 22` for XAU. Entry and exit thresholds for both instruments are dynamically adjusted: XAG uses an entry multiplier of 3.63864 and an exit multiplier of 1.79056, while XAU uses an entry multiplier of 2.026 and an exit multiplier of 0.10742.
+
+The entry multiplier for XAG is relatively wide, which means we expect trades to occur mainly during significant price movements. In contrast, the exit multiplier for XAU is very narrow, implying a very short holding period. These multiplier settings may indicate overfitting to specific high-profit trades with low drawdown, likely tailored to a few optimal scenarios.
 
 ```{r, echo = F, warning = F, message = F}
 fast_ma1 <- 51
@@ -2632,8 +2661,34 @@ The chart shows the cumulative Net and Gross PnL over the period from July 1, 20
 
 ## Summary and conclusions
 
--   The strategy applied to Group 1 data achieved an overall positive net return of approximately 20,700 on in sample data. However, the profits were inconsistent, with the majority of gains generated during two months, while the rest of months saw losses. This suggests that the strategy may have overfitted to a few highly profitable trades, rather than exhibiting sustainable performance across the entire period. On average, around 1-2 trades were made per day, with one quarter seeing as many as 12 trades per day on average. When it comes out of sample data, positive net PnL was observed only i two quarters. The rest was highly unprofitable. That confirms thesis that our strategy might be overfitting.
+### Group 1 Strategy Performance
 
--   The strategy applied to Group 2 generated a net profit of 20,866.9 on in sample data, though the performance was not entirely consistent. Highly profitable PnL was generated in 2024_Q2, which covered the majority of net PnL observed in those quarters. Several trades were made, averaging less than one per day. On the out of sample data, four out five quarters were higly unprofitable. This also indicates that out chosen strategy might have overfitted based on insample data.
+The strategy applied to **Group 1 data** achieved an overall **positive net return** of approximately **20,700** on in-sample data. However, the profits were **inconsistent**—the majority of gains were generated during two months, while the remaining months saw losses. This suggests that the strategy may have **overfitted** to a few highly profitable trades, rather than exhibiting sustainable performance across the entire period.
 
--   Both strategies displayed positive returns but with notable inconsistencies. Both groups saw the highest profits concentrated in a few months, with some months experiencing losses. The strategies showed that overfitting to highly profitable trades can affect long-term sustainability, and the number of trades did not always correlate with profitability.
+-   The **Sharpe Ratio (SR)** ranges from **-3.08** in **2023_Q4** to a high of **5.76** in **2022_Q3**. Higher SR values suggest better risk-adjusted returns, with **2022_Q3** standing out as the most profitable quarter.
+
+-   **Trade Frequency**: On average, around **2-3 trades per day** were made, with one quarter experiencing as many as **12 trades per day** on average.
+
+-   **Out-of-sample Data**: Positive net PnL was observed in only **two quarters**, while the rest were highly unprofitable. This further confirms the hypothesis that the strategy might have overfitted to the in-sample data. Overall net profit on out of sample data was around 10,300.
+
+### Group 2 Strategy Performance
+
+The strategy applied to **Group 2 data** generated a **net profit of 20,900** on in-sample data, though performance was not entirely consistent. The majority of the profit was concentrated in **2024_Q2**, which contributed significantly to the overall net PnL for those quarters.
+
+-   The **Sharpe Ratio (SR)** for **Dataset 2** follows a similar trend, with positive values in quarters like **2022_Q3** (**2.59**) and **2022_Q4** (**2.63**), but declining significantly in later quarters like **2023_Q3** (-2.58) and **2024_Q3** (-2.67).
+
+-   **Trade Frequency**: On average, fewer than **one trade per day** was executed, with the highest average number of trades occurring in **2023_Q2**, at **3.8 trades per day**.
+
+<!-- -->
+
+-   **Out-of-sample Data**: Four out of five quarters were **highly unprofitable**, reinforcing the idea that the strategy may have overfitted to the in-sample data. Overal net loss on out of sample data was around -19,100.
+
+### Key Insights
+
+-   Both strategies showed **positive overall returns**, but with notable inconsistencies.
+
+-   In both groups, the good performance measured by net SR and net PNL were concentrated in a few specific quarters, while some quarters experienced losses.
+
+-   The performance of both strategies highlights how **overfitting** to a small number of highly profitable trades can affect **long-term sustainability**.
+
+-   **Trade Frequency vs. Profitability**: While trade frequency varied, there was no consistent correlation with profitability. Some of the high-frequency trading periods were associated with substantial losses, reinforcing the importance of strategy robustness over frequent trading.
