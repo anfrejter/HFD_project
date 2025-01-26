@@ -161,14 +161,13 @@ stats_all_gr1 %>%
 
 The results for both "gross" and "net" indicators show significant variability, with notable declines in 2023 and the first half of 2024 for in sample data. Specifically, 2023_Q4 and 2024_Q1 and 2024_Q2 exhibit negative values, suggesting a decrease in performance during the analyzed period.
 
-When it comes to out of sample data, our strategy was backtested on 2022_Q2, 2023_Q1, 2023_Q3, 2024_Q3 and 2024_Q4. As presented in table above, only in 2022_Q2 and 2023_Q3 our strategy resulted in positive net profit. In 2023_Q3 only gross profit was positive, but due to transaction cost, net profit was negative.
+The "stat"reaches its peak in 2022_Q4 (2,187.12), correlating with high profitability, while very low values, like -6.17 in 2023_Q4, indicate poor performance. Also in 2022_Q4 extraordinary high Gross and Net Calmar ratio was observed.
+
+When it comes to out of sample data, our strategy was backtested on 2022_Q2, 2023_Q1, 2023_Q3, 2024_Q3 and 2024_Q4. As presented in table above, only in 2022_Q2 and 2023_Q3 our strategy resulted in positive net profit. In 2023_Q3 only gross profit was positive, but due to transaction cost, net profit was negative. Only in 2022_Q2 "stat" reached positive value of 35.64.
 
 ## PnL of results for **group 1** -- quarter 2022Q1
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2022_Q1"
 
 fast_ma2 <- 57
@@ -223,8 +222,7 @@ stats_res <- cbind(selected_quarter, stats_res)
 stats_all_gr1 <- rbind(stats_all_gr1, stats_res)
 data_all_inst2 <- rbind(data_all_inst2, res_vb2)
 
-par(mar = c(4, 4, 2, 1))  
- 
+
     plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
                cumsum(data_all_inst2$pnl_gross_fl)),
          multi.panel = FALSE,
@@ -243,9 +241,6 @@ The chart shows the cumulative Net and Gross PnL over the period from January 3,
 ## PnL of results for **group 1** -- quarter 2022Q2 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2022_Q2"
 
 fast_ma2 <- 57
@@ -315,14 +310,11 @@ par(mar = c(4, 4, 2, 1))
  
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from April 1, 2022, to June 30, 2022 created based on out of sample data. It reveals that the PnL generally increases over time, without huge drops, ultimately reaching a value of over 9,000 net. Not many transactions were executed.
+The chart shows the cumulative Net and Gross PnL over the period from April 1, 2022, to June 30, 2022 created based on out of sample data. It reveals that the PnL generally increases over time, without huge drops, reaching a value of over 9,000 net. Just a few transactions were executed.
 
 ## PnL of results for **group 1** -- quarter 2022Q3
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2022_Q3"
 
 fast_ma2 <- 57
@@ -394,14 +386,11 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022, to September 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 16,000 net.
+The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022, to September 31, 2022. It reveals that the PnL generally increases over time, with intermittent drops, reaching a value of over 16,000 net.Just a few transactions were executed.
 
 ## PnL of results for **group 1** -- quarter 2022Q4
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2022_Q4"
 
 fast_ma2 <- 57
@@ -473,14 +462,11 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from October 3, 2022, to December 30, 2022. It reveals that the PnL generally increases over time, with intermittent drops, ultimately reaching a value of over 11,000 net.
+The chart shows the cumulative Net and Gross PnL over the period from October 3, 2022, to December 30, 2022. It reveals that the PnL generally increases over time, with intermittent drops,reaching a value of over 11,000 net.Just a few transactions were executed.
 
 ## PnL of results for **group 1** -- quarter 2023Q1 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2023_Q1"
 
 fast_ma2 <- 57
@@ -550,14 +536,11 @@ par(mar = c(4, 4, 2, 1))
  
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period January 1, 2023, to March 31, 2022 created based on out of sample data. It reveals that the PnL generally increases over time, ultimately reaching a value of over 5,000 net. At the beginning of the period, the PnL remains around low values with limited number of executed trades. An upward trend is visible in March.
+The chart shows the cumulative Net and Gross PnL over the period January 1, 2023, to March 31, 2022 created based on out of sample data. It shows that the PnL generally increases over time, reaching a value of over 5,000 net. At the beginning of the period, the PnL remains around low values with limited number of executed trades. An upward trend is visible in March. At the and of the period more trades were executed.
 
 ## PnL of results for **group 1** -- quarter 2023Q2
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2023_Q2"
 
 fast_ma2 <- 57
@@ -629,14 +612,11 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from April 3 ,2023 , to June 30, 2023. It reveals that the PnL generally increases over time, with drops at the end of June, ultimately reaching a value of almost 4,000 net.
+The chart shows the cumulative Net and Gross PnL over the period from April 3 ,2023 , to June 30, 2023. It shows that the PnL generally increases over time, with drop at the end of June, reaching a value of almost 4,000 net. In this quarter more trades were executed in comparison to previous quarters.
 
 ## PnL of results for **group 1** -- quarter 2023Q3 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2023_Q3"
 
 fast_ma2 <- 57
@@ -706,14 +686,11 @@ par(mar = c(4, 4, 2, 1))
  
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period July 3, 2023, to September 29, 2023 created based on out of sample data. At the start of the period (early July), both Net and Gross PnL fluctuate around negative values, reflecting initial losses. An upward trend is visible mid-July, where Gross PnL peaks at over 6,000. At the end of the selected period huge drop was observed with net PnL reaching value of over -1,500 net.
+The chart shows the cumulative Net and Gross PnL over the period July 3, 2023, to September 29, 2023 created based on out of sample data. At the start of the period (early July), both Net and Gross PnL fluctuate around negative values, reflecting initial losses.Then, at the end of July, gross PnL increased to more than 6000. Shortly after,it decreased to values around 2000.  Then our startegy remains relatively flat with visible drop at the end of the period. Finally, Net PnL reached value of over -1,500 net.
 
 ## PnL of results for **group 1** -- quarter 2023Q4
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2023_Q4"
 
 # 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
@@ -794,9 +771,6 @@ The chart shows the cumulative Net and Gross PnL over the period from October 2,
 ## PnL of results for **group 1** -- quarter 2024Q1
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2024_Q1"
 
 # 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
@@ -872,14 +846,11 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from January 2 ,2024 , to March 25, 2024. It reveals that the PnL generally decreases at the beginning of the period. An upward trend is visible in March. At the end PnL reached value a value of almost -2,000.
+The chart shows the cumulative Net and Gross PnL over the period from January 2 ,2024 , to March 25, 2024. It shows that PnL generally decreases at the beginning of the period. An upward trend is visible in March. At the end PnL reached value a value of almost -2,000.
 
 ## PnL of results for **group 1** -- quarter 2024Q2
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2024_Q2"
 
 # 5,58,median,41,0.17525000000000002,88,2.6238500000000005,NQ,1,20,12
@@ -955,14 +926,11 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of -5,000. Huge drop was observed at the beginning of the period in April.
+The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time. Huge drop was observed at the beginning of the period in April. Net PnL reached a value of -5,000. 
 
 ## PnL of results for **group 1** -- quarter 2024Q3 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2024_Q3"
 
 fast_ma2 <- 57
@@ -1037,9 +1005,6 @@ The chart shows the cumulative Net and Gross PnL over the period July 1, 2024, t
 ## PnL of results for **group 1** -- quarter 2024Q4 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter <- "2024_Q4"
 
 fast_ma2 <- 57
@@ -1109,7 +1074,9 @@ par(mar = c(4, 4, 2, 1))
  
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period October 1, 2024, to December 31, 2024 created based on out of sample data. At the start of the period, both Net and Gross PnL perform an upward trend. At the end of December huge drop was observed, resulting in negative net PnL.
+The chart shows the cumulative Net and Gross PnL over the period October 1, 2024, to December 31, 2024 created based on out of sample data. At the start of the period, both Net and Gross PnL perform an upward trend. At the end of December huge drop was observed, resulting in negative net PnL reaching value of -500.
+
+
 
 ## Finally selected strategy for **group 2**
 
@@ -1118,9 +1085,6 @@ The *Double Volatility Breakout (VB)* strategy for Group 2 assets was chosen. In
 Signals for XAG are smoothed using the *mean* estimator, while for XAU, a *median* estimator is applied. Regime detection is performed through rolling windows with parameters window_regime = 98 for XAG and window_regime = 22 for XAU. Entry and exit thresholds for both instruments are dynamically adjusted, with XAG using m_entry = 3.63864 and m_exit = 1.79056, and XAU using m_entry = 2.026 and m_exit = 0.10742.
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 fast_ma1 <- 51
 ma_diff1 <- 89
 slow_ma1 <- fast_ma1 + ma_diff1
@@ -1232,6 +1196,7 @@ write.csv(stats_all_gr2,
 
 ## Summary of results for **group 2**
 
+
 ```{r, echo = F}
 stats_all_gr2 %>%
   mutate(
@@ -1259,18 +1224,16 @@ stats_all_gr2 %>%
   color(~ Quarter %in% c("2022_Q2", "2023_Q1", "2023_Q3", "2024_Q3", "2024_Q4"),
         ~ Quarter, color = 'darkorange') %>%
   autofit()
-```
+```  
 
-The table summarizes the performance of the strategy across different quarters, showing variability in both gross and net Sharpe Ratios (SR) and Calmar Ratios (CR). While some quarters, like 2022_Q3, 2022_Q4, and 2024_Q2, exhibit strong positive results (e.g., high net CR of 2855.91 in 2024_Q2), others, such as 2022_Q1 and 2024_Q1, demonstrate negative performance, indicating challenges in those periods.
+
+The table summarizes the performance of the strategy across different quarters, showing variability in both gross and net Sharpe Ratios (SR) and Calmar Ratios (CR). While some quarters, like 2022_Q4, 2024_Q2, exhibit strong positive results (e.g., high net CR of 2,148.85 in 2024_Q2), others, such as 2022_Q1 and 2024_Q1, demonstrate negative performance, indicating challenges in those periods.
 
 When it comes to out of sample data, our strategy was backtested on 2022_Q2, 2023_Q1, 2023_Q3, 2024_Q3 and 2024_Q4. As presented in table above, only in 2022_Q2 our strategy resulted in positive net profit. The rest of out of sample quarters finished with negative net profit.
 
 ## PnL of results for **group 2** -- quarter 2022Q1
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter<- "2022_Q1"
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -1386,9 +1349,6 @@ After the first quarter, only a few trades were executed, with the final one bei
 ## PnL of results for **group 2** -- quarter 2022Q2 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter<- "2022_Q2"
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -1499,15 +1459,12 @@ par(mar = c(4, 4, 2, 1))
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period April 1, 2022, to June 30, 2022 created based on out of sample data. At the beginning of the period an upward trend is visible. At the end of the selected period slight drop was observed with net PnL reaching value of almost 500 net.
+The chart shows the cumulative Net and Gross PnL over the period April 1, 2022, to June 30, 2022 created based on out of sample data. At the beginning of the period an upward trend is visible. PnL reached value of over 1000. At the end of the selected period slight drop was observed with net PnL reaching final value of almost 500 net.
+
 ## PnL of results for **group 2** -- quarter 2022Q3
 
 ```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2022_Q3"
-
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -1622,16 +1579,12 @@ library(openxlsx)
 
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022 , to September 30, 2022. It reveals that the PnL generally increases over time, ultimately reaching a value of almost 500 net.
+The chart shows the cumulative Net and Gross PnL over the period from July 1, 2022 , to September 30, 2022. It reveals that the PnL generally increases over time, ultimately reaching a value of almost 500 net. Just a few transactions were executed but profitable one.
 
 ## PnL of results for **group 2** -- quarter 2022Q4
 
 ```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2022_Q4"
-
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -1743,14 +1696,11 @@ data_all_inst2 <- c()
 
 ```
 
-During this quarter, the PnL increases to almost 6000, with the majority of the profits coming from just two trades.
+During this quarter, the PnL increases to almost 6000, with the majority of the profits coming from just two trades at the end of the period.
 
 ## PnL of results for **group 2** -- quarter 2023Q1 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter<- "2023_Q1"
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -1860,16 +1810,13 @@ par(mar = c(4, 4, 2, 1))
          legend.loc = "topleft",
          cex = 0.5)
 ```
-The chart shows the cumulative Net and Gross PnL over the period from January 1, 2023 , to March 31, 2023. It reveals that the PnL generally decreases over time, ultimately reaching a value of over -6,000 net.
+
+The chart shows the cumulative Net and Gross PnL over the period from January 1, 2023 , to March 31, 2023. It shows that the PnL generally decreases over time, reaching a value of over -6,000 net. First huge drop was observed in mid January, then the position stayed relatively flat.
 
 ## PnL of results for **group 2** -- quarter 2023Q2
 
 ```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2023_Q2"
-
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -1980,14 +1927,11 @@ data_all_inst2 <- c()
 
 ```
 
-Throughout this quarter, a significant number of trades were executed, but the majority were unprofitable. As a result, the final net PnL ended at -4,000.
+Throughout this quarter, a significant number of trades were executed, but the majority were unprofitable. This is the reason for huge transaction cost. As a result, the final net PnL ended at -4,000. Meanwhile, gross PnL finished positive.
 
 ## PnL of results for **group 2** -- quarter 2023Q3 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter<- "2023_Q3"
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -2097,15 +2041,12 @@ par(mar = c(4, 4, 2, 1))
          legend.loc = "topleft",
          cex = 0.5)
 ```
-The chart shows the cumulative Net and Gross PnL over the period from July 2, 2023 , to September 29, 2023. It reveals that the PnL generally decreases over time, ultimately reaching a value of almost -8,000 net. Huge drop at and of the period was observed.
+The chart shows the cumulative Net and Gross PnL over the period from July 2, 2023 , to September 29, 2023. It shows that the PnL generally decreases over time, reaching a value of almost -8,000 net. Huge drop at and of the period was observed.
+
 ## PnL of results for **group 2** -- quarter 2023Q4
 
 ```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2023_Q4"
-
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -2224,10 +2165,6 @@ The final net PnL for this quarter stands at approximately 3000, with the bulk o
 ```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2024_Q1"
 
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
-
 fast_ma1 <- 51
 ma_diff1 <- 89
 slow_ma1 <- fast_ma1 + ma_diff1
@@ -2344,10 +2281,6 @@ Only a few profitable trades were executed during this quarter, but the final ne
 ```{r, echo = F, warning = F, message = F}
 selected_quarter<- "2024_Q2"
 
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
-
 fast_ma1 <- 51
 ma_diff1 <- 89
 slow_ma1 <- fast_ma1 + ma_diff1
@@ -2462,9 +2395,7 @@ Three significant trades were executed during this period, resulting in a final 
 ## PnL of results for **group 2** -- quarter 2024Q3 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
+
 selected_quarter<- "2024_Q3"
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -2574,14 +2505,12 @@ par(mar = c(4, 4, 2, 1))
          legend.loc = "topleft",
          cex = 0.5)
 ```
-The chart shows the cumulative Net and Gross PnL over the period from July 1, 2024 , to September 30, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of almost -5,000 net. 
+
+The chart shows the cumulative Net and Gross PnL over the period from July 1, 2024 , to September 30, 2024. It shows that the PnL generally decreases over time, reaching a value of almost -5,000 net. 
 
 ## PnL of results for **group 2** -- quarter 2024Q4 -- out of sample
 
 ```{r, echo = F, warning = F, message = F}
-library(kableExtra)
-source("helpers/strategies.R")
-source("helpers/plots.R")
 selected_quarter<- "2024_Q4"
 fast_ma1 <- 51
 ma_diff1 <- 89
@@ -2691,12 +2620,13 @@ par(mar = c(4, 4, 2, 1))
          legend.loc = "topleft",
          cex = 0.5)
 ```
-The chart shows the cumulative Net and Gross PnL over the period from July 1, 2024 , to September 30, 2024. It reveals that the PnL generally decreases over time, ultimately reaching a value of almost -500 net. 
+
+The chart shows the cumulative Net and Gross PnL over the period from July 1, 2024 , to September 30, 2024. PnL stayed around 0 until November. Than profit around 1000was generated. Some drops occurred next. At the and Pnl resulted in negative values, close to 0.
 
 ## Summary and conclusions
 
--   The strategy applied to Group 1 data achieved an overall positive net return of approximately 20,700. However, the profits were inconsistent, with the majority of gains generated during two months, while the rest of the months saw losses. This suggests that the strategy may have overfitted to a few highly profitable trades, rather than exhibiting sustainable performance across the entire period. On average, around 1-2 trades were made per day, with one quarter seeing as many as 13 trades per day on average. Interestingly, the month with the highest number of trades was not profitable, further highlighting the strategy's inconsistency.
+-   The strategy applied to Group 1 data achieved an overall positive net return of approximately 20,700 on in sample data. However, the profits were inconsistent, with the majority of gains generated during two months, while the rest of months saw losses. This suggests that the strategy may have overfitted to a few highly profitable trades, rather than exhibiting sustainable performance across the entire period. On average, around 1-2 trades were made per day, with one quarter seeing as many as 12 trades per day on average. When it comes out of sample data, positive net PnL was observed only i two quarters. The rest was highly unprofitable. That confirms thesis that our strategy might be overfitting.
 
--   The strategy applied to Group 2 generated a net profit of 27,397.6, though the performance was not entirely consistent. However, it demonstrated more stability than Group 1. Profits were distributed across four months, with the final month accounting for nearly half of the total profits. Several trades were made, averaging less than one per day.
+-   The strategy applied to Group 2 generated a net profit of 20,866.9 on in sample data, though the performance was not entirely consistent. Highly profitable PnL was generated in 2024_Q2, which covered the majority of net PnL observed in those quarters. Several trades were made, averaging less than one per day. On the out of sample data, four out five quarters were higly unprofitable. This also indicates that out chosen strategy might have overfitted based on insample data.
 
--   Both strategies displayed positive returns but with notable inconsistencies. Group 2 performed more consistently than Group 1, but both groups saw the highest profits concentrated in a few months, with some months experiencing losses. The strategies showed that overfitting to highly profitable trades can affect long-term sustainability, and the number of trades did not always correlate with profitability.
+-   Both strategies displayed positive returns but with notable inconsistencies. Both groups saw the highest profits concentrated in a few months, with some months experiencing losses. The strategies showed that overfitting to highly profitable trades can affect long-term sustainability, and the number of trades did not always correlate with profitability.
