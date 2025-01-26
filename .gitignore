@@ -53,3 +53,8 @@ Dataset1/*
 Dataset2/*
 !Dataset2/.gitkeep
 .DS_Store
+
+*.docx
+*.html
+!results/**/*.csv
+/*.csv

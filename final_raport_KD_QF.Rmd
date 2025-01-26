@@ -47,15 +47,25 @@ For both sets of assets we considered following parameters in our strategies:
 
 ## Parameters optimalization
 
-**The parameter optimization process was conducted using Optuna in Python**, a hyperparameter optimization framework. The search involved defining a parameter space for moving averages, volatility windows, and thresholds, with each strategy's performance evaluated as an objective function based on metrics like net profit and Sharpe ratio. Optuna dynamically adjusted parameters during trials to explore high-performing combinations, and results were logged for detailed post-optimization analysis. Each asset group underwent separate optimization to ensure parameters were tailored to the unique characteristics of the data.
+**The parameter optimization process was conducted using Optuna in Python**, a hyperparameter optimization framework. The search involved defining a parameter space for moving averages, volatility windows, and thresholds, with each strategy's performance evaluated as an objective function. Optuna dynamically adjusted parameters during trials to explore high-performing combinations, and results were logged for detailed post-optimization analysis.
 
-The strategies showed that overfitting to highly profitable trades can affect long-term sustainability, especially given the optimization approach in Optuna. To mitigate this, I adjusted the optimization function by adding a penalty based on the mean and standard deviation of the statistics, aiming to reduce the overfitting risk and improve overall strategy robustness.
+Objective function was initially defined as below:
+
+$\sum_{i = q_{1}}^{q_{n}} stat_{i}$ where $stat_{i}$ is the statistic of the strategy for quarter $q_{i}$.
+
+However, strategies optimized using this function were prone to overfitting. To address this, we revised the objective function to:
+
+$\frac{\sum_{i=1}^n stat_{i}}{n} - \frac{1}{2}\sqrt{\frac{\sum_{i=1}^n (stat_{i} - \bar{stat})^2}{n-1}}$
+
+This new function incorporates a penalty for standard deviation, weighted by $\frac{1}{2}$, to balance performance consistency with high returns.
+
+## Framework
 
 # Group 1 -- summary of results (including out-of-sample)
 
 ## Finally selected strategy for **group 1**
 
-The **Volatility Breakout (VB)** strategy for Group 1 assets was chosen. We trade only one selected asset NQ, with point vale of 20\$ and transaction cost of 12\$. Strategy is based on detecting price breakouts using a combination of moving averages (**MA57** and **MA114**). Volatility memory window was set to 68, allowing the strategy to adjust based on recent volatility. Signals are smoothed using the mean estimator,which helps to reduce noise and improve the quality of trade signals. Regime detection is performed via rolling windows (window_regime = 40 ). A dynamic, regime-based approach (fl) is employed to adapt the strategy to varying market conditions.
+The **Volatility Breakout (VB)** strategy for Group 1 assets was chosen. We trade only one selected asset NQ, with point vale of 20\$ and transaction cost of 12\$. Strategy is based on detecting price breakouts using a combination of moving averages (**MA57** and **MA114**). **Volatility memory window** was set to **68**, allowing the strategy to adjust based on recent volatility. Signals are smoothed using the **mean estimator**, which helps to reduce noise and improve the quality of trade signals. Regime detection is performed via rolling windows (**window_regime = 40** ). A dynamic, regime-based approach (**fl**) is employed to adapt the strategy to varying market conditions.
 
 ```{r, echo = F, warning = F, message = F}
 library(kableExtra)
@@ -686,7 +696,7 @@ par(mar = c(4, 4, 2, 1))
  
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period July 3, 2023, to September 29, 2023 created based on out of sample data. At the start of the period (early July), both Net and Gross PnL fluctuate around negative values, reflecting initial losses.Then, at the end of July, gross PnL increased to more than 6000. Shortly after,it decreased to values around 2000.  Then our startegy remains relatively flat with visible drop at the end of the period. Finally, Net PnL reached value of over -1,500 net.
+The chart shows the cumulative Net and Gross PnL over the period July 3, 2023, to September 29, 2023 created based on out of sample data. At the start of the period (early July), both Net and Gross PnL fluctuate around negative values, reflecting initial losses.Then, at the end of July, gross PnL increased to more than 6000. Shortly after,it decreased to values around 2000. Then our startegy remains relatively flat with visible drop at the end of the period. Finally, Net PnL reached value of over -1,500 net.
 
 ## PnL of results for **group 1** -- quarter 2023Q4
 
@@ -926,7 +936,7 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time. Huge drop was observed at the beginning of the period in April. Net PnL reached a value of -5,000. 
+The chart shows the cumulative Net and Gross PnL over the period from April 1 ,2024 , to June 28, 2024. It reveals that the PnL generally decreases over time. Huge drop was observed at the beginning of the period in April. Net PnL reached a value of -5,000.
 
 ## PnL of results for **group 1** -- quarter 2024Q3 -- out of sample
 
@@ -1076,8 +1086,6 @@ par(mar = c(4, 4, 2, 1))
 
 The chart shows the cumulative Net and Gross PnL over the period October 1, 2024, to December 31, 2024 created based on out of sample data. At the start of the period, both Net and Gross PnL perform an upward trend. At the end of December huge drop was observed, resulting in negative net PnL reaching value of -500.
 
-
-
 ## Finally selected strategy for **group 2**
 
 The *Double Volatility Breakout (VB)* strategy for Group 2 assets was chosen. In this case, we trade two selected instruments: XAG, with point value of 5000\$ and transaction cost of 10\$ and XAU with point value of 100\$ and transaction cost of 15\$. The strategy is based on detecting price breakouts using a combination of moving averages and volatility parameters. For XAG, the moving averages are configured as MA51 (fast) and MA140 (slow), while for XAU, they are set to MA58 (fast) and MA115 (slow). Volatility parameters are set to 72 for XAG and 73 for XAU, respectively.
@@ -1196,7 +1204,6 @@ write.csv(stats_all_gr2,
 
 ## Summary of results for **group 2**
 
-
 ```{r, echo = F}
 stats_all_gr2 %>%
   mutate(
@@ -1224,8 +1231,7 @@ stats_all_gr2 %>%
   color(~ Quarter %in% c("2022_Q2", "2023_Q1", "2023_Q3", "2024_Q3", "2024_Q4"),
         ~ Quarter, color = 'darkorange') %>%
   autofit()
-```  
-
+```
 
 The table summarizes the performance of the strategy across different quarters, showing variability in both gross and net Sharpe Ratios (SR) and Calmar Ratios (CR). While some quarters, like 2022_Q4, 2024_Q2, exhibit strong positive results (e.g., high net CR of 2,148.85 in 2024_Q2), others, such as 2022_Q1 and 2024_Q1, demonstrate negative performance, indicating challenges in those periods.
 
@@ -2041,6 +2047,7 @@ par(mar = c(4, 4, 2, 1))
          legend.loc = "topleft",
          cex = 0.5)
 ```
+
 The chart shows the cumulative Net and Gross PnL over the period from July 2, 2023 , to September 29, 2023. It shows that the PnL generally decreases over time, reaching a value of almost -8,000 net. Huge drop at and of the period was observed.
 
 ## PnL of results for **group 2** -- quarter 2023Q4
@@ -2506,7 +2513,7 @@ par(mar = c(4, 4, 2, 1))
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from July 1, 2024 , to September 30, 2024. It shows that the PnL generally decreases over time, reaching a value of almost -5,000 net. 
+The chart shows the cumulative Net and Gross PnL over the period from July 1, 2024 , to September 30, 2024. It shows that the PnL generally decreases over time, reaching a value of almost -5,000 net.
 
 ## PnL of results for **group 2** -- quarter 2024Q4 -- out of sample
 
