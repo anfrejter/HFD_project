@@ -15,9 +15,9 @@ In the optimization process, several methods were applied across different asset
 
 Moving Average strategy used slow and fast moving averages as signals for entering or exiting trades. The Volatility Breakout strategy relied on volatility measures combined with predefined thresholds to generate trading signals. The Double Volatility Breakout strategy introduced stricter entry and exit conditions with separate thresholds to ensure better control over market positioning.
 
-The code implements three types of trading strategies:**momentum (mom)**,**mean reversion (mr)**, and a**dynamic regime-based strategy** (**fl**).
+The code implements three types of trading strategies: **momentum (mom)**, **mean reversion (mr)**, and a **dynamic regime-based strategy** (**fl**).
 
--   **Momentum Strategy**: This strategy follows trends by taking a long position when the fast moving average is above the slow moving average and a short position otherwise. It assumes that prices will continue moving in the direction of the trend..
+-   **Momentum Strategy**: This strategy follows trends by taking a long position when the fast moving average is above the slow moving average and a short position otherwise. It assumes that prices will continue moving in the direction of the trend.
 -   **Mean Reversion Strategy**: This strategy operates on the opposite principle, assuming prices will revert to their mean. It takes a short position when the fast moving average is above the slow moving average and a long position when it is below.
 -   **Dynamic Regime-Based Strategy**: This adaptive approach switches between momentum and mean reversion strategies based on the detected market regime. The market regime is determined using rolling windows and thresholds, with the type of regime (momentum or reversal) detected through the **correlation** of price movements. If the regime indicates a trending market, the strategy applies momentum; otherwise, it applies mean reversion.
 
@@ -38,7 +38,7 @@ For both sets of assets we considered following parameters in our strategies:
 3.  **Double Volatility Breakout Parameters**:
 
     -   **`m_exit`**: Defines the exit threshold for the strategy based on volatility (0.1-3).
-    -   **`m_diff`**: Controls the difference threshold for double breakout detection(0.1-3).
+    -   **`m_diff`**: Controls the difference threshold for double breakout detection (0.1-3).
 
 4.  **Market Regime Detection**
 
@@ -51,7 +51,9 @@ For both sets of assets we considered following parameters in our strategies:
 
 Objective function was initially defined as below:
 
-$\sum_{i = q_{1}}^{q_{n}} stat_{i}$ where $stat_{i}$ is the statistic of the strategy for quarter $q_{i}$.
+$\sum_{i = q_{1}}^{q_{n}} stat_{i}$
+
+Where $stat_{i}$ is the statistic of the strategy for quarter $q_{i}$.
 
 However, strategies optimized using this function were prone to overfitting. To address this, we revised the objective function to:
 
@@ -495,7 +497,7 @@ plot(cbind(cumsum(data_all_inst2$pnl_net_fl),
          cex = 0.5)
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period from October 3, 2022, to December 30, 2022. It reveals that the PnL generally increases over time, with intermittent drops,reaching a value of over 11,000 net.Just a few transactions were executed.
+The chart shows the cumulative Net and Gross PnL over the period from October 3, 2022, to December 30, 2022. It reveals that the PnL generally increases over time, with intermittent drops,reaching a value of over 11,000 net. Just a few transactions were executed.
 
 ## PnL of results for **group 1** -- quarter 2023Q1 -- out of sample
 
@@ -719,7 +721,7 @@ par(mar = c(4, 4, 2, 1))
  
 ```
 
-The chart shows the cumulative Net and Gross PnL over the period July 3, 2023, to September 29, 2023 created based on out of sample data. At the start of the period (early July), both Net and Gross PnL fluctuate around negative values, reflecting initial losses.Then, at the end of July, gross PnL increased to more than 6000. Shortly after,it decreased to values around 2000. Then our startegy remains relatively flat with visible drop at the end of the period. Finally, Net PnL reached value of over -1,500 net.
+The chart shows the cumulative Net and Gross PnL over the period July 3, 2023, to September 29, 2023 created based on out of sample data. At the start of the period (early July), both Net and Gross PnL fluctuate around negative values, reflecting initial losses.Then, at the end of July, gross PnL increased to more than 6000. Shortly after,it decreased to values around 2000. Then our strategy remains relatively flat with visible drop at the end of the period. Finally, Net PnL reached value of over -1,500 net.
 
 ## PnL of results for **group 1** -- quarter 2023Q4
 
@@ -2675,13 +2677,13 @@ The strategy applied to **Group 1 data** achieved an overall **positive net r
 
 The strategy applied to **Group 2 data** generated a **net profit of 20,900** on in-sample data, though performance was not entirely consistent. The majority of the profit was concentrated in **2024_Q2**, which contributed significantly to the overall net PnL for those quarters.
 
--   The **Sharpe Ratio (SR)** for **Dataset 2** follows a similar trend, with positive values in quarters like **2022_Q3** (**2.59**) and **2022_Q4** (**2.63**), but declining significantly in later quarters like **2023_Q3** (-2.58) and **2024_Q3** (-2.67).
+-   The **Sharpe Ratio (SR)** for **Dataset 2** follows a similar trend, with positive values in quarters like **2022_Q3** (**2.59**) and **2022_Q4** (**2.63**), but declining significantly in later quarters like **2023_Q3** (**-2.58**) and **2024_Q3** (**-2.67**)
 
 -   **Trade Frequency**: On average, fewer than **one trade per day** was executed, with the highest average number of trades occurring in **2023_Q2**, at **3.8 trades per day**.
 
 <!-- -->
 
--   **Out-of-sample Data**: Four out of five quarters were **highly unprofitable**, reinforcing the idea that the strategy may have overfitted to the in-sample data. Overal net loss on out of sample data was around -19,100.
+-   **Out-of-sample Data**: Four out of five quarters were **highly unprofitable**, reinforcing the idea that the strategy may have overfitted to the in-sample data. Overall net loss on out of sample data was around -19,100.
 
 ### Key Insights
 
